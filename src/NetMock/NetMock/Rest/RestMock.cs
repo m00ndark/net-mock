@@ -40,5 +40,10 @@ namespace NetMock.Rest
 		{
 			return _requests.AddAndReturn(new RestMethodRequest(method, path));
 		}
+
+		public void Verify(Method method, string path, Times times)
+		{
+			
+		}
 	}
 }
