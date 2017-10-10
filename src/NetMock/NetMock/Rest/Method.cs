@@ -6,6 +6,9 @@
 		Post,
 		Put,
 		Delete,
-		Head
+		Head,
+		Options,
+		Trace,
+		Connect
     }
 }
