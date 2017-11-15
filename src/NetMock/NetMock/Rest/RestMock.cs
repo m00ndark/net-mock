@@ -10,17 +10,17 @@ using Newtonsoft.Json;
 
 namespace NetMock.Rest
 {
-	public class RestMock : INetMock
+	public partial class RestMock : INetMock
 	{
 		private readonly HttpListenerController _httpListener;
-		private readonly List<RestRequestDefinition> _requestDefinitions;
+		private readonly List<RestRequestSetup> _requestDefinitions;
 		private readonly List<ReceivedRequest> _receivedRequests;
 		private bool _isActivated;
 
 	    internal RestMock(string basePath, int port, Scheme scheme, X509Certificate2 certificate = null)
 	    {
 			_httpListener = new HttpListenerController(HandleRequest, certificate);
-			_requestDefinitions = new List<RestRequestDefinition>();
+			_requestDefinitions = new List<RestRequestSetup>();
 			_receivedRequests = new List<ReceivedRequest>();
 		    _isActivated = false;
 
@@ -65,50 +65,6 @@ namespace NetMock.Rest
 			_requestDefinitions.Clear();
 	    }
 
-		public RestRequestDefinition Setup(Method method, string path, params IMatch[] matches)
-			=> _requestDefinitions.AddAndReturn(new RestRequestDefinition(this, method, path, matches));
-
-		public RestRequestDefinition Setup(Method method, string path, string body, params IMatch[] matches)
-			=> _requestDefinitions.AddAndReturn(new RestRequestDefinition(this, method, path, body, matches));
-
-		public RestRequestDefinition SetupGet(string path, params IMatch[] matches)
-			=> Setup(Method.Get, path, matches);
-
-		public RestRequestDefinition SetupPost(string path, params IMatch[] matches)
-			=> Setup(Method.Post, path, matches);
-
-		public RestRequestDefinition SetupPost(string path, string body, params IMatch[] matches)
-			=> Setup(Method.Post, path, body, matches);
-
-		public RestRequestDefinition SetupPut(string path, params IMatch[] matches)
-			=> Setup(Method.Put, path, matches);
-
-		public RestRequestDefinition SetupPut(string path, string body, params IMatch[] matches)
-			=> Setup(Method.Put, path, body, matches);
-
-		public RestRequestDefinition SetupDelete(string path, params IMatch[] matches)
-			=> Setup(Method.Delete, path, matches);
-
-		public RestRequestDefinition SetupDelete(string path, string body, params IMatch[] matches)
-			=> Setup(Method.Delete, path, body, matches);
-
-		public RestRequestDefinition SetupHead(string path, params IMatch[] matches)
-			=> Setup(Method.Head, path, matches);
-
-		public RestRequestDefinition SetupOptions(string path, params IMatch[] matches)
-			=> Setup(Method.Options, path, matches);
-
-		public RestRequestDefinition SetupTrace(string path, params IMatch[] matches)
-			=> Setup(Method.Trace, path, matches);
-
-		public RestRequestDefinition SetupConnect(string path, params IMatch[] matches)
-			=> Setup(Method.Connect, path, matches);
-
-		public void Verify(Method method, string path, Times times)
-		{
-			
-		}
-
 		private void ParseRequestDefinitions()
 		{
 			_requestDefinitions.ForEach(requestDefinition => requestDefinition.Parse());
@@ -131,7 +87,7 @@ namespace NetMock.Rest
 
 				if (matchedRequestDefinition != null)
 				{
-					matchedRequestDefinition.RequestDefinition.HitCount++;
+					// todo: handle scenario when .Response is null (no Returns method has been called)
 					object body = matchedRequestDefinition.RequestDefinition.Response.Body;
 					return body is string bodyStr ? bodyStr : JsonConvert.SerializeObject(body);
 				}

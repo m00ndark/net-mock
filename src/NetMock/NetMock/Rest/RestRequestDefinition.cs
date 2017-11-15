@@ -18,45 +18,20 @@ namespace NetMock.Rest
 		private List<UriSegment> _uriSegments;
 		private List<QueryParameter> _queryParameters;
 
-		internal RestRequestDefinition(RestMock restMock, Method method, string path, string body, IMatch[] matches)
-			: this(restMock, method, path, matches)
-		{
-			Body = body;
-		}
-
-		internal RestRequestDefinition(RestMock restMock, Method method, string path, IMatch[] matches)
+		internal RestRequestDefinition(RestMock restMock, Method method, string path, object body, IMatch[] matches)
 		{
 			RestMock = restMock;
 			Method = method;
 			Path = path ?? throw new ArgumentNullException(nameof(path));
+			Body = body;
 			Matches = matches;
 		}
 
 		private RestMock RestMock { get; }
 		public Method Method { get; }
 		public string Path { get; }
-		public string Body { get; }
+		public object Body { get; }
 		public IMatch[] Matches { get; }
-		public RestResponseDefinition Response { get; private set; }
-		internal int HitCount { get; set; } = 0;
-
-		public RestResponseDefinition Returns(object body)
-			=> Response = new RestResponseDefinition(body);
-
-		public RestResponseDefinition Returns<T1>(Func<T1, object> bodyProvider)
-			=> Response = new RestResponseDefinition(bodyProvider);
-
-		public RestResponseDefinition Returns<T1, T2>(Func<T1, T2, object> bodyProvider)
-			=> Response = new RestResponseDefinition(bodyProvider);
-
-		public RestResponseDefinition Returns<T1, T2, T3>(Func<T1, T2, T3, object> bodyProvider)
-			=> Response = new RestResponseDefinition(bodyProvider);
-
-		public RestResponseDefinition Returns<T1, T2, T3, T4>(Func<T1, T2, T3, T4, object> bodyProvider)
-			=> Response = new RestResponseDefinition(bodyProvider);
-
-		public RestResponseDefinition Returns<T1, T2, T3, T4, T5>(Func<T1, T2, T3, T4, T5, object> bodyProvider)
-			=> Response = new RestResponseDefinition(bodyProvider);
 
 		internal void Parse()
 		{
@@ -135,7 +110,7 @@ namespace NetMock.Rest
 			if (!MatchQueryParameters(parameters, matchResult))
 				return false;
 
-			// todo: match headers here
+			// todo: match body and headers here
 
 			return true;
 		}

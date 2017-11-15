@@ -49,7 +49,10 @@ namespace NetMock.Tests
 			{
 				// arrange
 				Message message = new Message("Running");
-				RestMock restMock = serviceMock.CreateSecureRestMock("/api/v1", 9001, "73f21fabb9f239159cfa76d42283200b55b74ed4", StoreName.My, StoreLocation.LocalMachine);
+				RestMock restMock = serviceMock.CreateSecureRestMock("/api/v1", 9001,
+					certificateThumbprint: "73f21fabb9f239159cfa76d42283200b55b74ed4",
+					storeName: StoreName.My,
+					storeLocation: StoreLocation.LocalMachine);
 				restMock.Setup(Method.Get, "/alive").Returns(message);
 				serviceMock.Activate();
 
@@ -78,11 +81,11 @@ namespace NetMock.Tests
 				serviceMock.Activate();
 
 				// act
-				IRestResponse response = _client.Get("/alive");
+				IRestResponse response = _client.Get("/message/e910015f-7026-402d-a0ef-cfa6fecab19f");
 
 				// assert
 				JsonAssert.AreEqual(message, response.Content);
-				restMock.Verify(Method.Get, "/alive", Times.Once);
+				restMock.Verify(Method.Get, "/message/{id}", Parameter.IsAny<Guid>("id"), Times.Once);
 			}
 		}
 	}

@@ -107,9 +107,12 @@ namespace NetMock.Server
 
 		private static void WriteResponse(HttpListenerContext context, string response, int statusCode)
 		{
-			byte[] responseBytes = Encoding.UTF8.GetBytes(response);
-
 			context.Response.StatusCode = statusCode;
+
+			if (response == null)
+				return;
+
+			byte[] responseBytes = Encoding.UTF8.GetBytes(response);
 			context.Response.ContentLength64 = responseBytes.Length;
 			context.Response.OutputStream.Write(responseBytes, 0, responseBytes.Length);
 		}
