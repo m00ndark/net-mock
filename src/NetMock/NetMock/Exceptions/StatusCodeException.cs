@@ -9,7 +9,7 @@ namespace NetMock.Exceptions
 	    public StatusCodeException(HttpStatusCode statusCode, string message) : this((int) statusCode, message) { }
 	    public StatusCodeException(HttpStatusCode statusCode, string message, Exception innerException) : this((int) statusCode, message, innerException) { }
 
-	    public StatusCodeException(int statusCode) : base(null)
+	    public StatusCodeException(int statusCode) : base($"{statusCode} {((HttpStatusCode) statusCode).ToString()}")
 	    {
 		    StatusCode = statusCode;
 	    }

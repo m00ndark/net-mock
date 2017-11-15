@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using NetMock.Exceptions;
+using NetMock.Rest.Parsed;
 using NetMock.Utils;
 
 namespace NetMock.Rest
@@ -15,8 +16,10 @@ namespace NetMock.Rest
 			(?:\&([0-9a-zA-Z\-]+)(?:=([0-9a-zA-Z\-]+|\{[a-zA-Z][0-9a-zA-Z]*\})){0,1})*)*)
 			$", RegexOptions.IgnorePatternWhitespace);
 
-		private List<UriSegment> _uriSegments;
-		private List<QueryParameter> _queryParameters;
+		private List<ParsedUriSegment> _parsedUriSegments;
+		private List<ParsedQueryParameter> _parsedQueryParameters;
+		private List<ParsedHeader> _parsedHeaders;
+		private ParsedBody _parsedBody;
 
 		internal RestRequestDefinition(RestMock restMock, Method method, string path, object body, IMatch[] matches)
 		{
@@ -52,7 +55,7 @@ namespace NetMock.Rest
 				return parameterMatch;
 			}
 
-			_uriSegments = regExMatch.Groups[1].Captures
+			_parsedUriSegments = regExMatch.Groups[1].Captures
 				.Cast<Capture>()
 				.Select(x => new
 					{
@@ -61,7 +64,7 @@ namespace NetMock.Rest
 					})
 				.Select(x => x.ParameterMatch != null
 					? new ParameterizedUriSegment(x.ParameterMatch)
-					: (UriSegment) new StaticUriSegment(x.Value))
+					: (ParsedUriSegment) new StaticUriSegment(x.Value))
 				.ToList();
 
 			IEnumerable<(string Name, string Value)> queryParameters = regExMatch.Groups[2].Success
@@ -71,7 +74,7 @@ namespace NetMock.Rest
 					.Append((regExMatch.Groups[2].Value, regExMatch.Groups[3].Value))
 				: null;
 
-			_queryParameters = queryParameters?
+			_parsedQueryParameters = queryParameters?
 				.Select(x => new
 					{
 						x.Name,
@@ -80,29 +83,41 @@ namespace NetMock.Rest
 					})
 				.Select(x => x.ParameterMatch != null
 					? new ParameterizedQueryParameter(x.Name, x.ParameterMatch)
-					: (QueryParameter) new StaticQueryParameter(x.Name, x.Value))
-				.ToList() ?? new List<QueryParameter>();
+					: (ParsedQueryParameter) new StaticQueryParameter(x.Name, x.Value))
+				.ToList() ?? new List<ParsedQueryParameter>();
+
+			// todo: parse headers here
+
+			IList<BodyMatch> bodyMatches = Matches
+				.OfType<BodyMatch>()
+				.ToArray();
+
+			if (bodyMatches.Count > 1)
+				throw new MockSetupException("Only one body match can be given per setup");
+
+			if (bodyMatches.Count == 1)
+				_parsedBody = new ParsedBody(bodyMatches[0], RestMock.InterpretBodyAsJson);
 		}
 
-		internal bool Match(Uri uri, IDictionary<string, string> headers, out IList<MatchResult> matchResult)
+		internal bool Match(ReceivedRequest request, out IList<MatchResult> matchResult)
 		{
 			matchResult = new List<MatchResult>();
 
-			string[] baseUriSegments = RestMock.BaseUri.TrimmedSegments();
-			string[] trimmedUriSegments = uri.TrimmedSegments();
+			IList<string> baseUriSegments = RestMock.BaseUri.TrimmedSegments();
+			IList<string> uriSegments = request.Uri.TrimmedSegments();
 
-			if (!baseUriSegments.SequenceEqual(trimmedUriSegments.Take(baseUriSegments.Length), StringComparer.OrdinalIgnoreCase))
+			if (!baseUriSegments.SequenceEqual(uriSegments.Take(baseUriSegments.Count), StringComparer.OrdinalIgnoreCase))
 				return false;
 
-			IList<string> uriSegments = trimmedUriSegments
-				.Skip(baseUriSegments.Length)
-				.Select(segment => segment.Trim('/'))
+			uriSegments = uriSegments
+				.Skip(baseUriSegments.Count)
 				.ToArray();
 
 			if (!MatchUriSegments(uriSegments, matchResult))
 				return false;
 
-			IDictionary<string, string> parameters = uri.Query
+			IDictionary<string, string> parameters = request.Uri.Query
+				.TrimStart('?')
 				.Split(new[] { '&' }, StringSplitOptions.RemoveEmptyEntries)
 				.Select(parameter => parameter.Split(new[] { '=' }, 2))
 				.ToDictionary(parameterSplit => parameterSplit[0], parameterSplit => parameterSplit.Length > 1 ? parameterSplit[1] : null);
@@ -112,17 +127,20 @@ namespace NetMock.Rest
 
 			// todo: match body and headers here
 
+			if (!MatchBody(request.Body, matchResult))
+				return false;
+
 			return true;
 		}
 
 		private bool MatchUriSegments(IList<string> uriSegments, ICollection<MatchResult> matchResult)
 		{
-			if (uriSegments.Count != _uriSegments.Count)
+			if (uriSegments.Count != _parsedUriSegments.Count)
 				return false;
 
 			for (int i = 0; i < uriSegments.Count; i++)
 			{
-				MatchResult result = _uriSegments[i].Match(uriSegments[i]);
+				MatchResult result = _parsedUriSegments[i].Match(uriSegments[i]);
 
 				if (!result.IsMatch)
 					return false;
@@ -135,16 +153,16 @@ namespace NetMock.Rest
 
 		private bool MatchQueryParameters(IDictionary<string, string> parameters, ICollection<MatchResult> matchResult)
 		{
-			if (RestMock.UndefinedQueryParameterHandling == UndefinedHandling.Fail && parameters.Count != _queryParameters.Count
-				|| RestMock.UndefinedQueryParameterHandling == UndefinedHandling.Ignore && parameters.Count < _queryParameters.Count)
+			if (RestMock.UndefinedQueryParameterHandling == UndefinedHandling.Fail && parameters.Count != _parsedQueryParameters.Count
+				|| RestMock.UndefinedQueryParameterHandling == UndefinedHandling.Ignore && parameters.Count < _parsedQueryParameters.Count)
 			{
 				return false;
 			}
 
-			HashSet<QueryParameter> matchedParameters = new HashSet<QueryParameter>();
+			HashSet<ParsedQueryParameter> matchedParameters = new HashSet<ParsedQueryParameter>();
 			foreach (var parameter in parameters)
 			{
-				var result = _queryParameters
+				var result = _parsedQueryParameters
 					.Select(queryParameter => new
 						{
 							QueryParameter = queryParameter,
@@ -159,12 +177,51 @@ namespace NetMock.Rest
 				}
 			}
 
-			return matchedParameters.Count == _queryParameters.Count;
+			return matchedParameters.Count == _parsedQueryParameters.Count;
 		}
 
 		private bool MatchHeaders(IDictionary<string, string> headers, ICollection<MatchResult> matchResult)
 		{
+			//if (RestMock.UndefinedHeaderHandling == UndefinedHandling.Fail && headers.Count != _parsedQueryParameters.Count
+			//	|| RestMock.UndefinedHeaderHandling == UndefinedHandling.Ignore && headers.Count < _parsedQueryParameters.Count)
+			//{
+			//	return false;
+			//}
+
+			//HashSet<QueryParameter> matchedParameters = new HashSet<QueryParameter>();
+			//foreach (var parameter in headers)
+			//{
+			//	var result = _parsedQueryParameters
+			//		.Select(queryParameter => new
+			//			{
+			//				QueryParameter = queryParameter,
+			//				MatchResult = queryParameter.Match(parameter.Key, parameter.Value)
+			//			})
+			//		.FirstOrDefault(x => x.MatchResult.IsMatch && !matchedParameters.Contains(x.QueryParameter));
+
+			//	if (result != null)
+			//	{
+			//		matchedParameters.Add(result.QueryParameter);
+			//		matchResult.Add(result.MatchResult);
+			//	}
+			//}
+
+			//return matchedParameters.Count == _parsedQueryParameters.Count;
+
 			throw new NotImplementedException();
+		}
+
+		private bool MatchBody(string body, ICollection<MatchResult> matchResult)
+		{
+			if (_parsedBody == null)
+				return true;
+
+			MatchResult result = _parsedBody.Match(body);
+
+			if (result.IsMatch)
+				matchResult.Add(result);
+
+			return result.IsMatch;
 		}
 	}
 }

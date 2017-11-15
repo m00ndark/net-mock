@@ -16,6 +16,7 @@ namespace NetMock.Server
 		private readonly Func<HttpListenerRequest, string> _requestCallback;
 		private readonly X509Certificate2 _certificate;
 		private HttpListener _httpListener;
+		private int _prefixPort;
 
 		static HttpListenerController()
 		{
@@ -30,6 +31,7 @@ namespace NetMock.Server
 			_requestCallback = requestCallback;
 			_certificate = certificate;
 			_httpListener = null;
+			_prefixPort = -1;
 		}
 
 		public bool IsListening => _httpListener != null;
@@ -46,7 +48,8 @@ namespace NetMock.Server
 					if (_certificate == null)
 						throw new CertificateException("Certifiace not provided. Unable to listen to https without binding certificate.");
 
-					CertificateUtil.BindCertificate(_certificate, uriPrefix.Port);
+					_prefixPort = uriPrefix.Port;
+					CertificateUtil.BindCertificate(_certificate, _prefixPort);
 				}
 
 				string prefix = useWildcardHost
@@ -127,6 +130,12 @@ namespace NetMock.Server
 				_httpListener?.Stop();
 				_httpListener?.Close();
 				_httpListener = null;
+
+				if (_prefixPort > -1)
+				{
+					CertificateUtil.UnbindCertificate(_prefixPort);
+					_prefixPort = -1;
+				}
 			}
 			catch
 			{

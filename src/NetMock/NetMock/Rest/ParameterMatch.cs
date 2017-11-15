@@ -1,7 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 
 namespace NetMock.Rest
 {
@@ -17,35 +15,8 @@ namespace NetMock.Rest
 		ContainsWord
 	}
 
-	internal class ParameterMatch : IMatch
+	internal class ParameterMatch : MatchBase
 	{
-		private static readonly Regex _whitespaceRegex = new Regex(@"\s");
-		private static readonly IDictionary<Type, Func<string, object>> _typeConverters;
-
-		static ParameterMatch()
-		{
-			_typeConverters = new Dictionary<Type, Func<string, object>>
-				{
-					{ typeof(string), value => value },
-					{ typeof(object), value => value },
-					{ typeof(int), value => int.TryParse(value, out int intValue) ? (object) intValue : null },
-					{ typeof(uint), value => uint.TryParse(value, out uint uintValue) ? (object) uintValue : null },
-					{ typeof(long), value => long.TryParse(value, out long longValue) ? (object) longValue : null },
-					{ typeof(ulong), value => ulong.TryParse(value, out ulong ulongValue) ? (object) ulongValue : null },
-					{ typeof(short), value => short.TryParse(value, out short shortValue) ? (object) shortValue : null },
-					{ typeof(ushort), value => ushort.TryParse(value, out ushort ushortValue) ? (object) ushortValue : null },
-					{ typeof(float), value => float.TryParse(value, out float floatValue) ? (object) floatValue : null },
-					{ typeof(double), value => double.TryParse(value, out double doubleValue) ? (object) doubleValue : null },
-					{ typeof(decimal), value => decimal.TryParse(value, out decimal decimalValue) ? (object) decimalValue : null },
-					{ typeof(sbyte), value => sbyte.TryParse(value, out sbyte sbyteValue) ? (object) sbyteValue : null },
-					{ typeof(byte), value => byte.TryParse(value, out byte byteValue) ? (object) byteValue : null },
-					{ typeof(bool), value => bool.TryParse(value, out bool boolValue) ? (object) boolValue : null },
-					{ typeof(char), value => char.TryParse(value, out char charValue) ? (object) charValue : null },
-					{ typeof(Guid), value => Guid.TryParse(value, out Guid guidValue) ? (object) guidValue : null },
-					{ typeof(DateTime), value => DateTime.TryParse(value, out DateTime dateTimeValue) ? (object) dateTimeValue : null },
-				};
-		}
-
 		public ParameterMatch(ParameterMatchOperation operation, string name)
 		{
 			Operation = operation;
@@ -82,7 +53,7 @@ namespace NetMock.Rest
 		public Type ValueType { get; }
 		public Func<string, bool> Condition { get; }
 
-		internal MatchResult Match(string value)
+		public override MatchResult Match(string value)
 		{
 			bool isMatch;
 			switch (Operation)
@@ -92,8 +63,8 @@ namespace NetMock.Rest
 					if (Value != null)
 					{
 						isMatch = value.Equals(Value, CompareCase == CompareCase.Insensitive
-							? StringComparison.InvariantCultureIgnoreCase
-							: StringComparison.InvariantCulture);
+							? StringComparison.OrdinalIgnoreCase
+							: StringComparison.Ordinal);
 					}
 					else
 					{
@@ -109,22 +80,22 @@ namespace NetMock.Rest
 				case ParameterMatchOperation.StartsWith:
 				{
 					isMatch = value.StartsWith(Value, CompareCase == CompareCase.Insensitive
-						? StringComparison.InvariantCultureIgnoreCase
-						: StringComparison.InvariantCulture);
+						? StringComparison.OrdinalIgnoreCase
+						: StringComparison.Ordinal);
 					return new MatchResult(this, isMatch, value);
 				}
 				case ParameterMatchOperation.EndsWith:
 				{
 					isMatch = value.EndsWith(Value, CompareCase == CompareCase.Insensitive
-						? StringComparison.InvariantCultureIgnoreCase
-						: StringComparison.InvariantCulture);
+						? StringComparison.OrdinalIgnoreCase
+						: StringComparison.Ordinal);
 					return new MatchResult(this, isMatch, value);
 				}
 				case ParameterMatchOperation.Contains:
 				{
 					isMatch = value.IndexOf(Value, CompareCase == CompareCase.Insensitive
-						? StringComparison.InvariantCultureIgnoreCase
-						: StringComparison.InvariantCulture) != -1;
+						? StringComparison.OrdinalIgnoreCase
+						: StringComparison.Ordinal) != -1;
 					return new MatchResult(this, isMatch, value);
 				}
 				case ParameterMatchOperation.StartsWithWord:
@@ -133,8 +104,8 @@ namespace NetMock.Rest
 						.Split(value)
 						.FirstOrDefault(word => !string.IsNullOrEmpty(word));
 					isMatch = firstWord?.Equals(Value, CompareCase == CompareCase.Insensitive
-						? StringComparison.InvariantCultureIgnoreCase
-						: StringComparison.InvariantCulture) ?? false;
+						? StringComparison.OrdinalIgnoreCase
+						: StringComparison.Ordinal) ?? false;
 					return new MatchResult(this, isMatch, value);
 				}
 				case ParameterMatchOperation.EndsWithWord:
@@ -143,8 +114,8 @@ namespace NetMock.Rest
 						.Split(value)
 						.LastOrDefault(word => !string.IsNullOrEmpty(word));
 					isMatch = lastWord?.Equals(Value, CompareCase == CompareCase.Insensitive
-						? StringComparison.InvariantCultureIgnoreCase
-						: StringComparison.InvariantCulture) ?? false;
+						? StringComparison.OrdinalIgnoreCase
+						: StringComparison.Ordinal) ?? false;
 					return new MatchResult(this, isMatch, value);
 				}
 				case ParameterMatchOperation.ContainsWord:
@@ -153,8 +124,8 @@ namespace NetMock.Rest
 						.Split(value)
 						.Where(word => !string.IsNullOrEmpty(word))
 						.Any(word => word.Equals(Value, CompareCase == CompareCase.Insensitive
-							? StringComparison.InvariantCultureIgnoreCase
-							: StringComparison.InvariantCulture));
+							? StringComparison.OrdinalIgnoreCase
+							: StringComparison.Ordinal));
 					return new MatchResult(this, isMatch, value);
 				}
 				default:

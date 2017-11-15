@@ -32,6 +32,18 @@ namespace NetMock.Utils
 			}
 		}
 
+		public static void UnbindCertificate(int port)
+		{
+			try
+			{
+				ExecuteNetsh($"http delete sslcert ipport=0.0.0.0:{port}");
+			}
+			catch (Exception ex)
+			{
+				throw new CertificateException($"Failed to unbind certificate for port {port} (requires administrative privileges)", ex);
+			}
+		}
+
 		private static void ExecuteNetsh(string args)
 		{
 			using (Process process = new Process

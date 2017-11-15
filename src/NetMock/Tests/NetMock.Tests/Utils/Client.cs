@@ -5,9 +5,9 @@ using RestSharp;
 namespace NetMock.Tests.Utils {
 	public class Client
 	{
-		public Client(string baseUri, int port)
+		public Client(string scheme, string baseUri, int port)
 		{
-			RestClient = new RestClient(new UriBuilder(Uri.UriSchemeHttps, "localhost", port, baseUri).Uri);
+			RestClient = new RestClient(new UriBuilder(scheme, "localhost", port, baseUri).Uri);
 		}
 
 		public RestClient RestClient { get; }
@@ -38,7 +38,8 @@ namespace NetMock.Tests.Utils {
 			}
 			if (body != null)
 			{
-				request.AddBody(body);
+				request.AddParameter(request.JsonSerializer.ContentType, body, ParameterType.RequestBody);
+				//request.AddBody(body);
 			}
 			return RestClient.Execute(request);
 		}

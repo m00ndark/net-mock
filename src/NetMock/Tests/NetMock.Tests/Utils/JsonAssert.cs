@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using System;
+using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 
 namespace NetMock.Tests.Utils
@@ -22,13 +23,31 @@ namespace NetMock.Tests.Utils
 				}
 				else
 				{
-					JToken actualJToken = actualJson != null
-						? JToken.Parse(actualJson)
-						: JToken.FromObject(actual);
+					JToken actualJToken;
+					try
+					{
+						actualJToken = actualJson != null
+							? JToken.Parse(actualJson)
+							: JToken.FromObject(actual);
+					}
+					catch
+					{
+						Assert.Fail($"Actual value is invalid Json:{Environment.NewLine}{actual}");
+						return;
+					}
 
-					JToken expectedJToken = expectedJson != null
-						? JToken.Parse(expectedJson)
-						: JToken.FromObject(expected);
+					JToken expectedJToken;
+					try
+					{
+						expectedJToken = expectedJson != null
+							? JToken.Parse(expectedJson)
+							: JToken.FromObject(expected);
+					}
+					catch
+					{
+						Assert.Fail($"Expected value is invalid Json:{Environment.NewLine}{expected}");
+						return;
+					}
 
 					Assert.IsTrue(JToken.DeepEquals(expectedJToken, actualJToken));
 				}

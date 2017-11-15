@@ -17,18 +17,18 @@ namespace NetMock.Rest
 		private readonly List<ReceivedRequest> _receivedRequests;
 		private bool _isActivated;
 
-	    internal RestMock(string basePath, int port, Scheme scheme, X509Certificate2 certificate = null)
-	    {
+		internal RestMock(string basePath, int port, Scheme scheme, X509Certificate2 certificate = null)
+		{
 			_httpListener = new HttpListenerController(HandleRequest, certificate);
 			_requestDefinitions = new List<RestRequestSetup>();
 			_receivedRequests = new List<ReceivedRequest>();
-		    _isActivated = false;
+			_isActivated = false;
 
-		    BasePath = basePath;
-		    Port = port;
-		    Scheme = scheme;
-		    Certificate = certificate;
-	    }
+			BasePath = basePath;
+			Port = port;
+			Scheme = scheme;
+			Certificate = certificate;
+		}
 
 		public string BasePath { get; }
 		public int Port { get; }
@@ -37,11 +37,12 @@ namespace NetMock.Rest
 		public HttpStatusCode DefaultResponseStatusCode { get; set; } = HttpStatusCode.NotImplemented;
 		public UndefinedHandling UndefinedQueryParameterHandling { get; set; } = UndefinedHandling.Fail;
 		public UndefinedHandling UndefinedHeaderHandling { get; set; } = UndefinedHandling.Ignore;
+		public bool InterpretBodyAsJson { get; set; } = true;
 
 		internal Uri BaseUri => new UriBuilder(Scheme == Scheme.Http ? Uri.UriSchemeHttp : Uri.UriSchemeHttps, "localhost", Port, BasePath).Uri;
 
 		public void Activate()
-	    {
+		{
 			if (_isActivated)
 				throw new InvalidOperationException("Already activated");
 
@@ -49,21 +50,21 @@ namespace NetMock.Rest
 
 			_httpListener.StartListening(BaseUri, useWildcardHost: true);
 
-		    _isActivated = true;
-	    }
+			_isActivated = true;
+		}
 
-	    public void TearDown()
-	    {
-		    if (!_isActivated)
-			    return;
+		public void TearDown()
+		{
+			if (!_isActivated)
+				return;
 
-		    _isActivated = false;
+			_isActivated = false;
 
 			_httpListener.StopListening();
 
 			_receivedRequests.Clear();
 			_requestDefinitions.Clear();
-	    }
+		}
 
 		private void ParseRequestDefinitions()
 		{
@@ -80,7 +81,7 @@ namespace NetMock.Rest
 					.Select(requestDefinition => new
 						{
 							RequestDefinition = requestDefinition,
-							IsMatch = requestDefinition.Match(request.Uri, request.Headers, out IList<MatchResult> matchResult),
+							IsMatch = requestDefinition.Match(request, out IList<MatchResult> matchResult),
 							MatchResult = matchResult
 						})
 					.LastOrDefault(x => x.IsMatch);

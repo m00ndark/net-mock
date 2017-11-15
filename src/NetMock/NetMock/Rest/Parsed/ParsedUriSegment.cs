@@ -1,13 +1,13 @@
 ﻿using System;
 
-namespace NetMock.Rest
+namespace NetMock.Rest.Parsed
 {
-	internal abstract class UriSegment
+	internal abstract class ParsedUriSegment
 	{
 		public abstract MatchResult Match(string value);
 	}
 
-	internal class StaticUriSegment : UriSegment
+	internal class StaticUriSegment : ParsedUriSegment
 	{
 		public StaticUriSegment(string value)
 		{
@@ -18,11 +18,11 @@ namespace NetMock.Rest
 
 		public override MatchResult Match(string value)
 		{
-			return new MatchResult(value.Equals(Value, StringComparison.InvariantCultureIgnoreCase), value);
+			return new MatchResult(value.Equals(Value, StringComparison.OrdinalIgnoreCase), value);
 		}
 	}
 
-	internal class ParameterizedUriSegment : UriSegment
+	internal class ParameterizedUriSegment : ParsedUriSegment
 	{
 		public ParameterizedUriSegment(ParameterMatch parameterMatch)
 		{

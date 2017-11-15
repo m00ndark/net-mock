@@ -1,10 +1,10 @@
 ﻿using System;
 
-namespace NetMock.Rest
+namespace NetMock.Rest.Parsed
 {
-	internal abstract class Header
+	internal abstract class ParsedHeader
 	{
-		protected Header(string name)
+		protected ParsedHeader(string name)
 		{
 			Name = name;
 		}
@@ -14,7 +14,7 @@ namespace NetMock.Rest
 		public abstract MatchResult Match(string name, string value);
 	}
 
-	internal class StaticHeader : Header
+	internal class StaticHeader : ParsedHeader
 	{
 		public StaticHeader(string name, string value) : base(name)
 		{
@@ -25,12 +25,12 @@ namespace NetMock.Rest
 
 		public override MatchResult Match(string name, string value)
 		{
-			return new MatchResult(name.Equals(Name, StringComparison.InvariantCultureIgnoreCase)
-				&& value.Equals(Value, StringComparison.InvariantCultureIgnoreCase), value);
+			return new MatchResult(name.Equals(Name, StringComparison.OrdinalIgnoreCase)
+				&& value.Equals(Value, StringComparison.OrdinalIgnoreCase), value);
 		}
 	}
 
-	internal class ParameterizedHeader : Header
+	internal class ParameterizedHeader : ParsedHeader
 	{
 		public ParameterizedHeader(string name, ParameterMatch parameterMatch) : base(name)
 		{
@@ -41,7 +41,7 @@ namespace NetMock.Rest
 
 		public override MatchResult Match(string name, string value)
 		{
-			return !Name.Equals(name, StringComparison.InvariantCultureIgnoreCase)
+			return !Name.Equals(name, StringComparison.OrdinalIgnoreCase)
 				? MatchResult.NoMatch
 				: ParameterMatch.Match(value);
 		}

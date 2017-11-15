@@ -1,10 +1,10 @@
 using System;
 
-namespace NetMock.Rest
+namespace NetMock.Rest.Parsed
 {
-	internal abstract class QueryParameter
+	internal abstract class ParsedQueryParameter
 	{
-		protected QueryParameter(string name)
+		protected ParsedQueryParameter(string name)
 		{
 			Name = name;
 		}
@@ -14,7 +14,7 @@ namespace NetMock.Rest
 		public abstract MatchResult Match(string name, string value);
 	}
 
-	internal class StaticQueryParameter : QueryParameter
+	internal class StaticQueryParameter : ParsedQueryParameter
 	{
 		public StaticQueryParameter(string name, string value) : base(name)
 		{
@@ -25,12 +25,12 @@ namespace NetMock.Rest
 
 		public override MatchResult Match(string name, string value)
 		{
-			return new MatchResult(name.Equals(Name, StringComparison.InvariantCultureIgnoreCase)
-				&& value.Equals(Value, StringComparison.InvariantCultureIgnoreCase), value);
+			return new MatchResult(name.Equals(Name, StringComparison.OrdinalIgnoreCase)
+				&& value.Equals(Value, StringComparison.OrdinalIgnoreCase), value);
 		}
 	}
 
-	internal class ParameterizedQueryParameter : QueryParameter
+	internal class ParameterizedQueryParameter : ParsedQueryParameter
 	{
 		public ParameterizedQueryParameter(string name, ParameterMatch parameterMatch) : base(name)
 		{
@@ -41,7 +41,7 @@ namespace NetMock.Rest
 
 		public override MatchResult Match(string name, string value)
 		{
-			return !Name.Equals(name, StringComparison.InvariantCultureIgnoreCase) 
+			return !Name.Equals(name, StringComparison.OrdinalIgnoreCase) 
 				? MatchResult.NoMatch
 				: ParameterMatch.Match(value);
 		}
