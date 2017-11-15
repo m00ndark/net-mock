@@ -7,6 +7,8 @@ namespace NetMock.Rest
 		internal RestRequestSetup(RestMock restMock, Method method, string path, object body, IMatch[] matches)
 			: base(restMock, method, path, body, matches) { }
 
+		protected override string DefinitionType => "setup";
+
 		public RestResponseDefinition Response { get; private set; }
 
 		public RestResponseDefinition Returns(object body)

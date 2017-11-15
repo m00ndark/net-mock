@@ -8,7 +8,7 @@ using NetMock.Utils;
 
 namespace NetMock.Rest
 {
-	public class RestRequestDefinition
+	public abstract class RestRequestDefinition
 	{
 		private static readonly Regex _pathRegEx = new Regex(@"^
 			(?:/|(?:/([0-9a-zA-Z\-]+|\{[a-zA-Z][0-9a-zA-Z]*\}))*
@@ -21,7 +21,7 @@ namespace NetMock.Rest
 		private List<ParsedHeader> _parsedHeaders;
 		private ParsedBody _parsedBody;
 
-		internal RestRequestDefinition(RestMock restMock, Method method, string path, object body, IMatch[] matches)
+		protected RestRequestDefinition(RestMock restMock, Method method, string path, object body, IMatch[] matches)
 		{
 			RestMock = restMock;
 			Method = method;
@@ -29,6 +29,8 @@ namespace NetMock.Rest
 			Body = body;
 			Matches = matches;
 		}
+
+		protected abstract string DefinitionType { get; }
 
 		private RestMock RestMock { get; }
 		public Method Method { get; }
@@ -41,7 +43,7 @@ namespace NetMock.Rest
 			Match regExMatch = _pathRegEx.Match(Path);
 
 			if (!regExMatch.Success)
-				throw new MockSetupException($"Invalid path: {Path}");
+				throw new MockSetupException($"Invalid {DefinitionType} path: {Path}");
 
 			IDictionary<string, ParameterMatch> parameterMatches = Matches
 				.OfType<ParameterMatch>()
@@ -50,7 +52,7 @@ namespace NetMock.Rest
 			ParameterMatch GetParameterMatch(string parameterName)
 			{
 				if (!parameterMatches.TryGetValue(parameterName, out ParameterMatch parameterMatch))
-					throw new MockSetupException($"Parameter in path not defined: {parameterName}");
+					throw new MockSetupException($"Parameter in {DefinitionType} path not defined: {parameterName}");
 
 				return parameterMatch;
 			}
@@ -93,7 +95,7 @@ namespace NetMock.Rest
 				.ToArray();
 
 			if (bodyMatches.Count > 1)
-				throw new MockSetupException("Only one body match can be given per setup");
+				throw new MockSetupException($"Only one body match can be given per {DefinitionType}");
 
 			if (bodyMatches.Count == 1)
 				_parsedBody = new ParsedBody(bodyMatches[0], RestMock.InterpretBodyAsJson);

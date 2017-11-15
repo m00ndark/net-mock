@@ -93,7 +93,7 @@ namespace NetMock.Tests
 		}
 
 		[Test]
-		public void Scenario02_QueryParameter()
+		public void Scenario03_QueryParameter()
 		{
 			using (ServiceMock serviceMock = new ServiceMock())
 			{
@@ -112,12 +112,12 @@ namespace NetMock.Tests
 
 				// assert
 				JsonAssert.AreEqual(message, response.Content);
-				restMock.VerifyGet("/message?msgid={id}", Parameter.IsAny<Guid>("id"), Times.Once);
+				restMock.VerifyGet("/message?msgid={id}&x=y", Parameter.IsAny<Guid>("id"), Times.Once);
 			}
 		}
 
 		[Test]
-		public void Scenario03_Body()
+		public void Scenario04_Body()
 		{
 			using (ServiceMock serviceMock = new ServiceMock())
 			{

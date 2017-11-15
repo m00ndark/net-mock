@@ -1,4 +1,8 @@
-﻿namespace NetMock.Rest
+﻿using System.Collections.Generic;
+using System.Linq;
+using NetMock.Exceptions;
+
+namespace NetMock.Rest
 {
 	public partial class RestMock
 	{
@@ -436,7 +440,11 @@
 
 		public void Verify(Method method, string path, object body, IMatch[] matches, Times times)
 		{
-			//new RestRequestDefinition(this, method, path)
+			RestRequestVerification requestVerification = new RestRequestVerification(this, method, path, body, matches);
+			int matchCount = _receivedRequests.Count(request => requestVerification.Match(request, out IList<MatchResult> matchResult));
+
+			if (matchCount != times.No)
+				throw new NetMockException($"Expected incoming calls to the mock {times.No} times, but was {matchCount} times");
 		}
 	}
 }
