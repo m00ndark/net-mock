@@ -1,16 +1,16 @@
 namespace NetMock.Rest {
 	public class Times
 	{
-		internal Times(int no)
+		internal Times(int callCount)
 		{
-			No = no;
+			CallCount = callCount;
 		}
 
-		public int No { get; }
+		public int CallCount { get; }
 
 		public static Times Never { get; } = new Times(0);
 		public static Times Once { get; } = new Times(1);
 		public static Times Twice { get; } = new Times(2);
-		public static Times Exactly(int no) => new Times(no);
+		public static Times Exactly(int callCount) => new Times(callCount);
 	}
 }

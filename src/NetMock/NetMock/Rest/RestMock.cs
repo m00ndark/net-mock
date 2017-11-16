@@ -14,14 +14,14 @@ namespace NetMock.Rest
 	{
 		private readonly HttpListenerController _httpListener;
 		private readonly List<RestRequestSetup> _requestDefinitions;
-		private readonly List<ReceivedRequest> _receivedRequests;
+		private readonly List<IReceivedRequest> _receivedRequests;
 		private bool _isActivated;
 
 		internal RestMock(string basePath, int port, Scheme scheme, X509Certificate2 certificate = null)
 		{
 			_httpListener = new HttpListenerController(HandleRequest, certificate);
 			_requestDefinitions = new List<RestRequestSetup>();
-			_receivedRequests = new List<ReceivedRequest>();
+			_receivedRequests = new List<IReceivedRequest>();
 			_isActivated = false;
 
 			BasePath = basePath;
@@ -64,6 +64,18 @@ namespace NetMock.Rest
 
 			_receivedRequests.Clear();
 			_requestDefinitions.Clear();
+		}
+
+		public void PrintReceivedRequests(params Func<IReceivedRequest, string>[] selectors)
+			=> PrintReceivedRequests("\t", selectors);
+
+		public void PrintReceivedRequests(string separator, params Func<IReceivedRequest, string>[] selectors)
+			=> PrintReceivedRequests(Console.WriteLine, separator, selectors);
+
+		public void PrintReceivedRequests(Action<string> printer, string separator, params Func<IReceivedRequest, string>[] selectors)
+		{
+			foreach (IReceivedRequest receivedRequest in _receivedRequests)
+				printer(string.Join(separator, selectors.Select(selector => selector(receivedRequest))));
 		}
 
 		private void ParseRequestDefinitions()

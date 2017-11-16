@@ -1,5 +1,5 @@
 using System;
-using System.Collections;
+using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using NetMock.Rest;
 using NetMock.Tests.Model;
@@ -18,7 +18,7 @@ namespace NetMock.Tests
 		private Client _client;
 		private Client _secureClient;
 
-		[SetUp]
+		[OneTimeSetUp]
 		public void Initialize()
 		{
 			_client = new Client(Uri.UriSchemeHttp, "/api/v1", 9001);
@@ -117,7 +117,34 @@ namespace NetMock.Tests
 		}
 
 		[Test]
-		public void Scenario04_Body()
+		public void Scenario04_UriSegmentParameter_QueryParameter()
+		{
+			using (ServiceMock serviceMock = new ServiceMock())
+			{
+				// arrange
+				string[] categories = { "FRUIT", "MEAT", "JAM" };
+				Message message = new Message("Running");
+				RestMock restMock = serviceMock.CreateRestMock("/api/v1", 9001);
+
+				restMock
+					.SetupGet("/message/{category}?msgid={id}&x=y",
+						Parameter.IsAny<Guid>("id"),
+						Parameter.Is("category", x => categories.Contains(x.ToUpper())))
+					.Returns(message);
+
+				serviceMock.Activate();
+
+				// act
+				IRestResponse response = _client.Get("/message/jam?msgid=e910015f-7026-402d-a0ef-cfa6fecab19f&x=y");
+
+				// assert
+				JsonAssert.AreEqual(message, response.Content);
+				restMock.VerifyGet("/message/jam?msgid={id}&x=y", Parameter.IsAny<Guid>("id"), Times.Once);
+			}
+		}
+
+		[Test]
+		public void Scenario05_Body()
 		{
 			using (ServiceMock serviceMock = new ServiceMock())
 			{
@@ -135,10 +162,16 @@ namespace NetMock.Tests
 				// act
 				IRestResponse response = _client.Post("/message/reverse", body: JsonConvert.SerializeObject(requestMessage));
 
+				_client.Get("/alive");
+				_client.Get("/message/e910015f-7026-402d-a0ef-cfa6fecab19f");
+				_client.Get("/message/jam?msgid=e910015f-7026-402d-a0ef-cfa6fecab19f&x=y");
+
 				// assert
 				JsonAssert.AreEqual(responseMessage, response.Content);
 				restMock.VerifyPost("/message/reverse", Body.Is(requestMessage), Times.Once);
 				restMock.VerifyPost("/message/reverse", Body.Is("{ 'Text': 'torraP' }"), Times.Never);
+
+				restMock.PrintReceivedRequests(" ", x => x.Method, x => x.Uri.ToString(), x => $"(body length: {x.Body.Length})");
 			}
 		}
 	}

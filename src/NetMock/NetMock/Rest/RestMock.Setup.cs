@@ -10,20 +10,11 @@ namespace NetMock.Rest
 		public RestRequestSetup SetupPost(string path, params IMatch[] matches)
 			=> Setup(Method.Post, path, matches);
 
-		public RestRequestSetup SetupPost(string path, object body, params IMatch[] matches)
-			=> Setup(Method.Post, path, body, matches);
-
 		public RestRequestSetup SetupPut(string path, params IMatch[] matches)
 			=> Setup(Method.Put, path, matches);
 
-		public RestRequestSetup SetupPut(string path, object body, params IMatch[] matches)
-			=> Setup(Method.Put, path, body, matches);
-
 		public RestRequestSetup SetupDelete(string path, params IMatch[] matches)
 			=> Setup(Method.Delete, path, matches);
-
-		public RestRequestSetup SetupDelete(string path, object body, params IMatch[] matches)
-			=> Setup(Method.Delete, path, body, matches);
 
 		public RestRequestSetup SetupHead(string path, params IMatch[] matches)
 			=> Setup(Method.Head, path, matches);
@@ -38,9 +29,6 @@ namespace NetMock.Rest
 			=> Setup(Method.Connect, path, matches);
 
 		public RestRequestSetup Setup(Method method, string path, params IMatch[] matches)
-			=> Setup(method, path, null, matches);
-
-		public RestRequestSetup Setup(Method method, string path, object body, params IMatch[] matches)
-			=> _requestDefinitions.AddAndReturn(new RestRequestSetup(this, method, path, body, matches));
+			=> _requestDefinitions.AddAndReturn(new RestRequestSetup(this, method, path, matches));
 	}
 }

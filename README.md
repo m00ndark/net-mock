@@ -1,6 +1,104 @@
 # net-mock
 
-A .NET network service mock framework, inspired by [moq](https://github.com/moq) syntax, providing the ability to mock REST and web socket APIs from within unit tests.
+NetMock is a .NET network service mock framework, inspired by [Moq](https://github.com/moq) syntax, providing the ability to mock REST and web socket APIs from within a test framework of choice.
+
+## Examples
+
+A set of examples to show usage and possibilities are part of the solution, available [here](https://github.com/m00ndark/net-mock/blob/master/src/NetMock/Tests/NetMock.Tests/RestMockTest.cs).
+
+## Status
+
+The following table shows the implementation status of currenly planned features.
+
+### REST mock
+Component | Feature | Status
+--- | --- | ---
+HTTP methods | `Get `, `Post `, `Put `, `Delete `, `Head `, `Options `, `Trace `, `Connect` | &#10003;
+Request setup | `Setup(Method method, string path, params IMatch[] matches)` | &#10003;
+&nbsp; | `SetupGet(string path, params IMatch[] matches)` | &#10003;
+&nbsp; | `SetupPost(string path, params IMatch[] matches)` | &#10003;
+&nbsp; | `SetupPut(string path, params IMatch[] matches)` | &#10003;
+&nbsp; | `SetupDelete(string path, params IMatch[] matches)` | &#10003;
+&nbsp; | `SetupHead(string path, params IMatch[] matches)` | &#10003;
+&nbsp; | `SetupOptions(string path, params IMatch[] matches)` | &#10003;
+&nbsp; | `SetupTrace(string path, params IMatch[] matches)` | &#10003;
+&nbsp; | `SetupConnect(string path, params IMatch[] matches)` | &#10003;
+Request verification | `Verify(Method method, string path, params IMatch[] matches, Times times)` | &#10003;
+&nbsp; | `VerifyGet(string path, params IMatch[] matches, Times times)` | &#10003;
+&nbsp; | `VerifyPost(string path, params IMatch[] matches, Times times)` | &#10003;
+&nbsp; | `VerifyPut(string path, params IMatch[] matches, Times times)` | &#10003;
+&nbsp; | `VerifyDelete(string path, params IMatch[] matches, Times times)` | &#10003;
+&nbsp; | `VerifyHead(string path, params IMatch[] matches, Times times)` | &#10003;
+&nbsp; | `VerifyOptions(string path, params IMatch[] matches, Times times)` | &#10003;
+&nbsp; | `VerifyTrace(string path, params IMatch[] matches, Times times)` | &#10003;
+&nbsp; | `VerifyConnect(string path, params IMatch[] matches, Times times)` | &#10003;
+Response setup | `Returns(object body)` | &#10003;
+&nbsp; | `Returns(object body, params AttachedHeader[] headers)` |
+&nbsp; | `Returns(int statusCode, object body, params AttachedHeader[] headers)` |
+&nbsp; | `Returns<T1>(Func<T1, object> bodyProvider, params AttachedHeader[] headers)` |
+&nbsp; | `Returns<T1>(int statusCode, Func<T1, object> bodyProvider, params AttachedHeader[] headers)` |
+&nbsp; | `Returns<T1, T2>(Func<T1, T2, object> bodyProvider, params AttachedHeader[] headers)` |
+&nbsp; | `Returns<T1, T2>(int statusCode, Func<T1, T2, object> bodyProvider, params AttachedHeader[] headers)` |
+&nbsp; | `Returns<T1, T2, T3>(Func<T1, T2, T3, object> bodyProvider, params AttachedHeader[] headers)` |
+&nbsp; | `Returns<T1, T2, T3>(int statusCode, Func<T1, T2, T3, object> bodyProvider, params AttachedHeader[] headers)` |
+&nbsp; | `Returns<T1, T2, T3, T4>(Func<T1, T2, T3, T4, object> bodyProvider, params AttachedHeader[] headers)` |
+&nbsp; | `Returns<T1, T2, T3, T4>(int statusCode, Func<T1, T2, T3, T4, object> bodyProvider, params AttachedHeader[] headers)` |
+&nbsp; | `Returns<T1, T2, T3, T4, T5>(Func<T1, T2, T3, T4, T5, object> bodyProvider, params AttachedHeader[] headers)` |
+&nbsp; | `Returns<T1, T2, T3, T4, T5>(int statusCode, Func<T1, T2, T3, T4, T5, object> bodyProvider, params AttachedHeader[] headers)` |
+Parameter matching | `Parameter.Is(string name, string value, CompareCase compareCase)` | &#10003;
+&nbsp; | `Parameter.Is(string name, Func<string, bool> condition)` | &#10003;
+&nbsp; | `Parameter.IsAny(string name)` | &#10003;
+&nbsp; | `Parameter.IsAny<TValue>(string name)` | &#10003;
+&nbsp; | `Parameter.StartsWith(string name, string value, CompareCase compareCase)` | &#10003;
+&nbsp; | `Parameter.EndsWith(string name, string value, CompareCase compareCase)` | &#10003;
+&nbsp; | `Parameter.Contains(string name, string value, CompareCase compareCase)` | &#10003;
+&nbsp; | `Parameter.StartsWithWord(string name, string word, CompareCase compareCase)` | &#10003;
+&nbsp; | `Parameter.EndsWithWord(string name, string word, CompareCase compareCase)` | &#10003;
+&nbsp; | `Parameter.ContainsWord(string name, string word, CompareCase compareCase)` | &#10003;
+Header matching | `Header.Is(string name, string value, CompareCase compareCase)` | 
+&nbsp; | `Header.IsNot(string name, string value, CompareCase compareCase)` | 
+&nbsp; | `Header.IsSet(string name)` | 
+&nbsp; | `Header.IsNotSet(string name)` | 
+&nbsp; | `Header.Contains(string value, CompareCase compareCase)` |
+Body matching | `Body.Is(object value)` | &#10003;
+&nbsp; | `Body.Is(string value, CompareCase compareCase)` | &#10003;
+&nbsp; | `Body.Is(Func<string, bool> condition)` | &#10003;
+&nbsp; | `Body.Is<TValue>(Func<TValue, bool> condition)` | 
+&nbsp; | `Body.IsEmpty()` | &#10003;
+&nbsp; | `Body.IsNotEmpty()` | &#10003;
+&nbsp; | `Body.Contains(string value, CompareCase compareCase)` | &#10003;
+&nbsp; | `Body.ContainsWord(string word, CompareCase compareCase)` | &#10003;
+Verification hit count matching | `Times.Never` | &#10003;
+&nbsp; | `Times.Once` | &#10003;
+&nbsp; | `Times.Twice` | &#10003;
+&nbsp; | `Times.AtLeastOnce` |
+&nbsp; | `Times.AtMostOnce` |
+&nbsp; | `Times.Exactly(int callCount)` | &#10003;
+&nbsp; | `Times.AtLeast(int callCount)` |
+&nbsp; | `Times.AtMost(int callCount)` |
+&nbsp; | `Times.Between(int callCountFrom, int callCountTo)` |
+
+<!--
+&nbsp; | `` | &#10003;
+&nbsp; | `` | &#10003;
+&nbsp; | `` | &#10003;
+&nbsp; | `` | &#10003;
+&nbsp; | `` | &#10003;
+&nbsp; | `` | &#10003;
+&nbsp; | `` | &#10003;
+&nbsp; | `` | &#10003;
+&nbsp; | `` | &#10003;
+&nbsp; | `` | &#10003;
+&nbsp; | `` | &#10003;
+&nbsp; | `` | &#10003;
+&nbsp; | `` | &#10003;
+-->
+
+### Web socket mock
+
+No implementation started.
+
+## Inspiration
 
 ```csharp
 // arrange

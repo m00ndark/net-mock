@@ -4,8 +4,8 @@ namespace NetMock.Rest
 {
 	public class RestRequestSetup : RestRequestDefinition
 	{
-		internal RestRequestSetup(RestMock restMock, Method method, string path, object body, IMatch[] matches)
-			: base(restMock, method, path, body, matches) { }
+		internal RestRequestSetup(RestMock restMock, Method method, string path, IMatch[] matches)
+			: base(restMock, method, path, matches) { }
 
 		protected override string DefinitionType => "setup";
 
@@ -14,8 +14,14 @@ namespace NetMock.Rest
 		public RestResponseDefinition Returns(object body)
 			=> Response = new RestResponseDefinition(body);
 
+		//public RestResponseDefinition Returns(int statusCode, object body)
+		//	=> Response = new RestResponseDefinition(body);
+
 		public RestResponseDefinition Returns<T1>(Func<T1, object> bodyProvider)
 			=> Response = new RestResponseDefinition(bodyProvider);
+
+		//public RestResponseDefinition Returns<T1>(int statusCode, Func<T1, object> bodyProvider)
+		//	=> Response = new RestResponseDefinition(bodyProvider);
 
 		public RestResponseDefinition Returns<T1, T2>(Func<T1, T2, object> bodyProvider)
 			=> Response = new RestResponseDefinition(bodyProvider);

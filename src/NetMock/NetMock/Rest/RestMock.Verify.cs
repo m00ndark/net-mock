@@ -72,39 +72,6 @@ namespace NetMock.Rest
 		public void VerifyPost(string path, IMatch match1, IMatch match2, IMatch match3, IMatch match4, IMatch match5, IMatch match6, IMatch match7, IMatch match8, IMatch match9, IMatch match10, Times times)
 			=> Verify(Method.Post, path, new[] { match1, match2, match3, match4, match5, match6, match7, match8, match9, match10 }, times);
 
-		public void VerifyPost(string path, object body, Times times)
-			=> Verify(Method.Post, path, body, new IMatch[0], times);
-
-		public void VerifyPost(string path, object body, IMatch match, Times times)
-			=> Verify(Method.Post, path, body, new[] { match }, times);
-
-		public void VerifyPost(string path, object body, IMatch match1, IMatch match2, Times times)
-			=> Verify(Method.Post, path, body, new[] { match1, match2 }, times);
-
-		public void VerifyPost(string path, object body, IMatch match1, IMatch match2, IMatch match3, Times times)
-			=> Verify(Method.Post, path, body, new[] { match1, match2, match3 }, times);
-
-		public void VerifyPost(string path, object body, IMatch match1, IMatch match2, IMatch match3, IMatch match4, Times times)
-			=> Verify(Method.Post, path, body, new[] { match1, match2, match3, match4 }, times);
-
-		public void VerifyPost(string path, object body, IMatch match1, IMatch match2, IMatch match3, IMatch match4, IMatch match5, Times times)
-			=> Verify(Method.Post, path, body, new[] { match1, match2, match3, match4, match5 }, times);
-
-		public void VerifyPost(string path, object body, IMatch match1, IMatch match2, IMatch match3, IMatch match4, IMatch match5, IMatch match6, Times times)
-			=> Verify(Method.Post, path, body, new[] { match1, match2, match3, match4, match5, match6 }, times);
-
-		public void VerifyPost(string path, object body, IMatch match1, IMatch match2, IMatch match3, IMatch match4, IMatch match5, IMatch match6, IMatch match7, Times times)
-			=> Verify(Method.Post, path, body, new[] { match1, match2, match3, match4, match5, match6, match7 }, times);
-
-		public void VerifyPost(string path, object body, IMatch match1, IMatch match2, IMatch match3, IMatch match4, IMatch match5, IMatch match6, IMatch match7, IMatch match8, Times times)
-			=> Verify(Method.Post, path, body, new[] { match1, match2, match3, match4, match5, match6, match7, match8 }, times);
-
-		public void VerifyPost(string path, object body, IMatch match1, IMatch match2, IMatch match3, IMatch match4, IMatch match5, IMatch match6, IMatch match7, IMatch match8, IMatch match9, Times times)
-			=> Verify(Method.Post, path, body, new[] { match1, match2, match3, match4, match5, match6, match7, match8, match9 }, times);
-
-		public void VerifyPost(string path, object body, IMatch match1, IMatch match2, IMatch match3, IMatch match4, IMatch match5, IMatch match6, IMatch match7, IMatch match8, IMatch match9, IMatch match10, Times times)
-			=> Verify(Method.Post, path, body, new[] { match1, match2, match3, match4, match5, match6, match7, match8, match9, match10 }, times);
-
 		public void VerifyPut(string path, Times times)
 			=> Verify(Method.Put, path, new IMatch[0], times);
 
@@ -138,39 +105,6 @@ namespace NetMock.Rest
 		public void VerifyPut(string path, IMatch match1, IMatch match2, IMatch match3, IMatch match4, IMatch match5, IMatch match6, IMatch match7, IMatch match8, IMatch match9, IMatch match10, Times times)
 			=> Verify(Method.Put, path, new[] { match1, match2, match3, match4, match5, match6, match7, match8, match9, match10 }, times);
 
-		public void VerifyPut(string path, object body, Times times)
-			=> Verify(Method.Put, path, body, new IMatch[0], times);
-
-		public void VerifyPut(string path, object body, IMatch match, Times times)
-			=> Verify(Method.Put, path, body, new[] { match }, times);
-
-		public void VerifyPut(string path, object body, IMatch match1, IMatch match2, Times times)
-			=> Verify(Method.Put, path, body, new[] { match1, match2 }, times);
-
-		public void VerifyPut(string path, object body, IMatch match1, IMatch match2, IMatch match3, Times times)
-			=> Verify(Method.Put, path, body, new[] { match1, match2, match3 }, times);
-
-		public void VerifyPut(string path, object body, IMatch match1, IMatch match2, IMatch match3, IMatch match4, Times times)
-			=> Verify(Method.Put, path, body, new[] { match1, match2, match3, match4 }, times);
-
-		public void VerifyPut(string path, object body, IMatch match1, IMatch match2, IMatch match3, IMatch match4, IMatch match5, Times times)
-			=> Verify(Method.Put, path, body, new[] { match1, match2, match3, match4, match5 }, times);
-
-		public void VerifyPut(string path, object body, IMatch match1, IMatch match2, IMatch match3, IMatch match4, IMatch match5, IMatch match6, Times times)
-			=> Verify(Method.Put, path, body, new[] { match1, match2, match3, match4, match5, match6 }, times);
-
-		public void VerifyPut(string path, object body, IMatch match1, IMatch match2, IMatch match3, IMatch match4, IMatch match5, IMatch match6, IMatch match7, Times times)
-			=> Verify(Method.Put, path, body, new[] { match1, match2, match3, match4, match5, match6, match7 }, times);
-
-		public void VerifyPut(string path, object body, IMatch match1, IMatch match2, IMatch match3, IMatch match4, IMatch match5, IMatch match6, IMatch match7, IMatch match8, Times times)
-			=> Verify(Method.Put, path, body, new[] { match1, match2, match3, match4, match5, match6, match7, match8 }, times);
-
-		public void VerifyPut(string path, object body, IMatch match1, IMatch match2, IMatch match3, IMatch match4, IMatch match5, IMatch match6, IMatch match7, IMatch match8, IMatch match9, Times times)
-			=> Verify(Method.Put, path, body, new[] { match1, match2, match3, match4, match5, match6, match7, match8, match9 }, times);
-
-		public void VerifyPut(string path, object body, IMatch match1, IMatch match2, IMatch match3, IMatch match4, IMatch match5, IMatch match6, IMatch match7, IMatch match8, IMatch match9, IMatch match10, Times times)
-			=> Verify(Method.Put, path, body, new[] { match1, match2, match3, match4, match5, match6, match7, match8, match9, match10 }, times);
-
 		public void VerifyDelete(string path, Times times)
 			=> Verify(Method.Delete, path, new IMatch[0], times);
 
@@ -203,39 +137,6 @@ namespace NetMock.Rest
 
 		public void VerifyDelete(string path, IMatch match1, IMatch match2, IMatch match3, IMatch match4, IMatch match5, IMatch match6, IMatch match7, IMatch match8, IMatch match9, IMatch match10, Times times)
 			=> Verify(Method.Delete, path, new[] { match1, match2, match3, match4, match5, match6, match7, match8, match9, match10 }, times);
-
-		public void VerifyDelete(string path, object body, Times times)
-			=> Verify(Method.Delete, path, body, new IMatch[0], times);
-
-		public void VerifyDelete(string path, object body, IMatch match, Times times)
-			=> Verify(Method.Delete, path, body, new[] { match }, times);
-
-		public void VerifyDelete(string path, object body, IMatch match1, IMatch match2, Times times)
-			=> Verify(Method.Delete, path, body, new[] { match1, match2 }, times);
-
-		public void VerifyDelete(string path, object body, IMatch match1, IMatch match2, IMatch match3, Times times)
-			=> Verify(Method.Delete, path, body, new[] { match1, match2, match3 }, times);
-
-		public void VerifyDelete(string path, object body, IMatch match1, IMatch match2, IMatch match3, IMatch match4, Times times)
-			=> Verify(Method.Delete, path, body, new[] { match1, match2, match3, match4 }, times);
-
-		public void VerifyDelete(string path, object body, IMatch match1, IMatch match2, IMatch match3, IMatch match4, IMatch match5, Times times)
-			=> Verify(Method.Delete, path, body, new[] { match1, match2, match3, match4, match5 }, times);
-
-		public void VerifyDelete(string path, object body, IMatch match1, IMatch match2, IMatch match3, IMatch match4, IMatch match5, IMatch match6, Times times)
-			=> Verify(Method.Delete, path, body, new[] { match1, match2, match3, match4, match5, match6 }, times);
-
-		public void VerifyDelete(string path, object body, IMatch match1, IMatch match2, IMatch match3, IMatch match4, IMatch match5, IMatch match6, IMatch match7, Times times)
-			=> Verify(Method.Delete, path, body, new[] { match1, match2, match3, match4, match5, match6, match7 }, times);
-
-		public void VerifyDelete(string path, object body, IMatch match1, IMatch match2, IMatch match3, IMatch match4, IMatch match5, IMatch match6, IMatch match7, IMatch match8, Times times)
-			=> Verify(Method.Delete, path, body, new[] { match1, match2, match3, match4, match5, match6, match7, match8 }, times);
-
-		public void VerifyDelete(string path, object body, IMatch match1, IMatch match2, IMatch match3, IMatch match4, IMatch match5, IMatch match6, IMatch match7, IMatch match8, IMatch match9, Times times)
-			=> Verify(Method.Delete, path, body, new[] { match1, match2, match3, match4, match5, match6, match7, match8, match9 }, times);
-
-		public void VerifyDelete(string path, object body, IMatch match1, IMatch match2, IMatch match3, IMatch match4, IMatch match5, IMatch match6, IMatch match7, IMatch match8, IMatch match9, IMatch match10, Times times)
-			=> Verify(Method.Delete, path, body, new[] { match1, match2, match3, match4, match5, match6, match7, match8, match9, match10 }, times);
 
 		public void VerifyHead(string path, Times times)
 			=> Verify(Method.Head, path, new IMatch[0], times);
@@ -402,49 +303,13 @@ namespace NetMock.Rest
 		public void Verify(Method method, string path, IMatch match1, IMatch match2, IMatch match3, IMatch match4, IMatch match5, IMatch match6, IMatch match7, IMatch match8, IMatch match9, IMatch match10, Times times)
 			=> Verify(method, path, new[] { match1, match2, match3, match4, match5, match6, match7, match8, match9, match10 }, times);
 
-		public void Verify(Method method, string path, object body, Times times)
-			=> Verify(method, path, body, new IMatch[0], times);
-
-		public void Verify(Method method, string path, object body, IMatch match, Times times)
-			=> Verify(method, path, body, new[] { match }, times);
-
-		public void Verify(Method method, string path, object body, IMatch match1, IMatch match2, Times times)
-			=> Verify(method, path, body, new[] { match1, match2 }, times);
-
-		public void Verify(Method method, string path, object body, IMatch match1, IMatch match2, IMatch match3, Times times)
-			=> Verify(method, path, body, new[] { match1, match2, match3 }, times);
-
-		public void Verify(Method method, string path, object body, IMatch match1, IMatch match2, IMatch match3, IMatch match4, Times times)
-			=> Verify(method, path, body, new[] { match1, match2, match3, match4 }, times);
-
-		public void Verify(Method method, string path, object body, IMatch match1, IMatch match2, IMatch match3, IMatch match4, IMatch match5, Times times)
-			=> Verify(method, path, body, new[] { match1, match2, match3, match4, match5 }, times);
-
-		public void Verify(Method method, string path, object body, IMatch match1, IMatch match2, IMatch match3, IMatch match4, IMatch match5, IMatch match6, Times times)
-			=> Verify(method, path, body, new[] { match1, match2, match3, match4, match5, match6 }, times);
-
-		public void Verify(Method method, string path, object body, IMatch match1, IMatch match2, IMatch match3, IMatch match4, IMatch match5, IMatch match6, IMatch match7, Times times)
-			=> Verify(method, path, body, new[] { match1, match2, match3, match4, match5, match6, match7 }, times);
-
-		public void Verify(Method method, string path, object body, IMatch match1, IMatch match2, IMatch match3, IMatch match4, IMatch match5, IMatch match6, IMatch match7, IMatch match8, Times times)
-			=> Verify(method, path, body, new[] { match1, match2, match3, match4, match5, match6, match7, match8 }, times);
-
-		public void Verify(Method method, string path, object body, IMatch match1, IMatch match2, IMatch match3, IMatch match4, IMatch match5, IMatch match6, IMatch match7, IMatch match8, IMatch match9, Times times)
-			=> Verify(method, path, body, new[] { match1, match2, match3, match4, match5, match6, match7, match8, match9 }, times);
-
-		public void Verify(Method method, string path, object body, IMatch match1, IMatch match2, IMatch match3, IMatch match4, IMatch match5, IMatch match6, IMatch match7, IMatch match8, IMatch match9, IMatch match10, Times times)
-			=> Verify(method, path, body, new[] { match1, match2, match3, match4, match5, match6, match7, match8, match9, match10 }, times);
-
 		public void Verify(Method method, string path, IMatch[] matches, Times times)
-			=> Verify(method, path, null, matches, times);
-
-		public void Verify(Method method, string path, object body, IMatch[] matches, Times times)
 		{
-			RestRequestVerification requestVerification = new RestRequestVerification(this, method, path, body, matches);
+			RestRequestVerification requestVerification = new RestRequestVerification(this, method, path, matches);
 			int matchCount = _receivedRequests.Count(request => requestVerification.Match(request, out IList<MatchResult> matchResult));
 
-			if (matchCount != times.No)
-				throw new NetMockException($"Expected incoming calls to the mock {times.No} times, but was {matchCount} times");
+			if (matchCount != times.CallCount)
+				throw new NetMockException($"Expected incoming calls to the mock {times.CallCount} times, but was {matchCount} times");
 		}
 	}
 }

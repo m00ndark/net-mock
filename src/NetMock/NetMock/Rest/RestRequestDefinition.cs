@@ -16,17 +16,17 @@ namespace NetMock.Rest
 			(?:\&([0-9a-zA-Z\-]+)(?:=([0-9a-zA-Z\-]+|\{[a-zA-Z][0-9a-zA-Z]*\})){0,1})*)*)
 			$", RegexOptions.IgnorePatternWhitespace);
 
+		private string _parsedMethod;
 		private List<ParsedUriSegment> _parsedUriSegments;
 		private List<ParsedQueryParameter> _parsedQueryParameters;
 		private List<ParsedHeader> _parsedHeaders;
 		private ParsedBody _parsedBody;
 
-		protected RestRequestDefinition(RestMock restMock, Method method, string path, object body, IMatch[] matches)
+		protected RestRequestDefinition(RestMock restMock, Method method, string path, IMatch[] matches)
 		{
 			RestMock = restMock;
 			Method = method;
 			Path = path ?? throw new ArgumentNullException(nameof(path));
-			Body = body;
 			Matches = matches;
 		}
 
@@ -35,11 +35,12 @@ namespace NetMock.Rest
 		private RestMock RestMock { get; }
 		public Method Method { get; }
 		public string Path { get; }
-		public object Body { get; }
 		public IMatch[] Matches { get; }
 
 		internal void Parse()
 		{
+			_parsedMethod = Method.ToString().ToUpperInvariant();
+
 			Match regExMatch = _pathRegEx.Match(Path);
 
 			if (!regExMatch.Success)
@@ -101,9 +102,12 @@ namespace NetMock.Rest
 				_parsedBody = new ParsedBody(bodyMatches[0], RestMock.InterpretBodyAsJson);
 		}
 
-		internal bool Match(ReceivedRequest request, out IList<MatchResult> matchResult)
+		internal bool Match(IReceivedRequest request, out IList<MatchResult> matchResult)
 		{
 			matchResult = new List<MatchResult>();
+
+			if (request.Method != _parsedMethod)
+				return false;
 
 			IList<string> baseUriSegments = RestMock.BaseUri.TrimmedSegments();
 			IList<string> uriSegments = request.Uri.TrimmedSegments();

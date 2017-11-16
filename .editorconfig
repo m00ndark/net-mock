@@ -1,0 +1,25 @@
+root = true
+
+[*]
+end_of_line = CRLF
+insert_final_newline = true
+trim_trailing_whitespace = true
+charset = utf-8
+
+[*.cs]
+indent_style = tab
+indent_size = 4
+max_line_length = off
+
+[*.md]
+indent_style = tab
+indent_size = 4
+trim_trailing_whitespace = false
+
+[*.{txt,sln,proj,props,targets,xml,config,nuspec}]
+indent_style = tab
+indent_size = 4
+
+[*.{csproj,resx}]
+indent_style = space
+indent_size = 2
