@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Security.Cryptography.X509Certificates;
 using NetMock.Rest;
@@ -6,14 +6,23 @@ using NetMock.Utils;
 
 namespace NetMock
 {
+	public enum ActivationStrategy
+	{
+		Manual,
+		AutomaticOnCreation
+	}
+
 	public class ServiceMock : IDisposable
 	{
 		private readonly List<INetMock> _mocks;
 
-		public ServiceMock()
+		public ServiceMock(ActivationStrategy activationStrategy = ActivationStrategy.Manual)
 		{
+			ActivationStrategy = activationStrategy;
 			_mocks = new List<INetMock>();
 		}
+
+		public ActivationStrategy ActivationStrategy { get; }
 
 		public RestMock CreateRestMock(string basePath, int port)
 		{
@@ -30,7 +39,8 @@ namespace NetMock
 
 		public void Activate()
 		{
-			_mocks.ForEach(mock => mock.Activate());
+			if (ActivationStrategy == ActivationStrategy.Manual)
+				_mocks.ForEach(mock => mock.Activate());
 		}
 
 		public void TearDown()

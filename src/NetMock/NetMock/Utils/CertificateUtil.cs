@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
@@ -13,9 +13,14 @@ namespace NetMock.Utils
 			using (X509Store store = new X509Store(storeName, storeLocation))
 			{
 				store.Open(OpenFlags.ReadOnly);
-				return store.Certificates
+				X509Certificate2 certificate = store.Certificates
 					.OfType<X509Certificate2>()
 					.FirstOrDefault(x => x.Thumbprint.Equals(certificateThumbprint, StringComparison.OrdinalIgnoreCase));
+
+				if (certificate == null)
+					throw new CertificateException($"Certificate not found: {certificateThumbprint} {storeName} @ {storeLocation}");
+
+				return certificate;
 			}
 		}
 
