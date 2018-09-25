@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
+using NetMock.Exceptions;
 using NetMock.Rest;
 using NetMock.Tests.Model;
 using NetMock.Tests.Utils;
@@ -43,6 +44,8 @@ namespace NetMock.Tests
 				// assert
 				JsonAssert.AreEqual(message, response.Content);
 				restMock.Verify(Method.Get, "/alive", Times.Once);
+
+				restMock.PrintReceivedRequests();
 			}
 		}
 
@@ -64,6 +67,8 @@ namespace NetMock.Tests
 				// assert
 				JsonAssert.AreEqual(responseBody, response.Content);
 				restMock.Verify(Method.Get, "/alive", Times.Once);
+
+				restMock.PrintReceivedRequests();
 			}
 		}
 
@@ -87,6 +92,8 @@ namespace NetMock.Tests
 				// assert
 				JsonAssert.AreEqual(message, response.Content);
 				restMock.Verify(Method.Get, "/alive", Times.Once);
+
+				restMock.PrintReceivedRequests();
 			}
 		}
 
@@ -111,6 +118,8 @@ namespace NetMock.Tests
 				// assert
 				JsonAssert.AreEqual(message, response.Content);
 				restMock.VerifyGet("/message/{id}", Parameter.IsAny<Guid>("id"), Times.Once);
+
+				restMock.PrintReceivedRequests();
 			}
 		}
 
@@ -135,6 +144,8 @@ namespace NetMock.Tests
 				// assert
 				JsonAssert.AreEqual(message, response.Content);
 				restMock.VerifyGet("/message?msgid={id}&x=y", Parameter.IsAny<Guid>("id"), Times.Once);
+
+				restMock.PrintReceivedRequests();
 			}
 		}
 
@@ -162,11 +173,13 @@ namespace NetMock.Tests
 				// assert
 				JsonAssert.AreEqual(message, response.Content);
 				restMock.VerifyGet("/message/jam?msgid={id}&x=y", Parameter.IsAny<Guid>("id"), Times.Once);
+
+				restMock.PrintReceivedRequests();
 			}
 		}
 
 		[Test]
-		public void Body_NonMatchedRequests()
+		public void RequestBody_MockBehaviorLoose_NonMatchedRequests()
 		{
 			using (ServiceMock serviceMock = new ServiceMock())
 			{
@@ -193,12 +206,43 @@ namespace NetMock.Tests
 				restMock.VerifyPost("/message/reverse", Body.Is(requestMessage), Times.Once);
 				restMock.VerifyPost("/message/reverse", Body.Is("{ 'Text': 'torraP' }"), Times.Never);
 
-				restMock.PrintReceivedRequests(" ", x => x.Method, x => x.Uri.ToString(), x => $"(body length: {x.Body.Length})");
+				restMock.PrintReceivedRequests();
 			}
 		}
 
 		[Test]
-		public void BodyMatchByCondition()
+		public void RequestBody_MockBehaviorStrict_NonMatchedRequests()
+		{
+			using (ServiceMock serviceMock = new ServiceMock())
+			{
+				// arrange
+				Message requestMessage = new Message("Parrot");
+				Message responseMessage = new Message("torraP");
+				RestMock restMock = serviceMock.CreateRestMock("/api/v1", 9001, MockBehavior.Strict);
+
+				restMock
+					.SetupPost("/message/reverse", Body.Is(requestMessage))
+					.Returns(responseMessage);
+
+				serviceMock.Activate();
+
+				// act
+				IRestResponse response = _client.Post("/message/reverse", body: JsonConvert.SerializeObject(requestMessage));
+
+				_client.Get("/alive");
+				_client.Get("/message/e910015f-7026-402d-a0ef-cfa6fecab19f");
+				_client.Get("/message/jam?msgid=e910015f-7026-402d-a0ef-cfa6fecab19f&x=y");
+
+				// assert
+				JsonAssert.AreEqual(responseMessage, response.Content);
+				restMock.VerifyPost("/message/reverse", Body.Is(requestMessage), Times.Once);
+				restMock.VerifyPost("/message/reverse", Body.Is("{ 'Text': 'torraP' }"), Times.Never);
+				Console.WriteLine(Assert.Throws<StrictMockException>(() => restMock.TearDown()));
+			}
+		}
+
+		[Test]
+		public void RequestBodyMatchByCondition()
 		{
 			using (ServiceMock serviceMock = new ServiceMock())
 			{
@@ -221,7 +265,7 @@ namespace NetMock.Tests
 				restMock.VerifyPost("/message/reverse", Body.Is(requestMessage), Times.Once);
 				restMock.VerifyPost("/message/reverse", Body.Is("{ 'Text': 'torraP' }"), Times.Never);
 
-				restMock.PrintReceivedRequests(" ", x => x.Method, x => x.Uri.ToString(), x => $"(body length: {x.Body.Length})");
+				restMock.PrintReceivedRequests();
 			}
 		}
 
@@ -246,7 +290,7 @@ namespace NetMock.Tests
 				JsonAssert.AreEqual(string.Empty, response.Content);
 				restMock.Verify(Method.Get, "/alive", Times.Once);
 
-				restMock.PrintReceivedRequests(" ", x => x.Method, x => x.Uri.ToString(), x => $"(body length: {x.Body.Length})");
+				restMock.PrintReceivedRequests();
 			}
 		}
 
@@ -275,7 +319,7 @@ namespace NetMock.Tests
 				CollectionAssert.Contains(response.Headers.Select(x => (x.Name, x.Value.ToString())), ("X-Message-Case-Sensitive", "true"));
 				restMock.VerifyPost("/message/reverse/store", Body.Is(requestMessage), Times.Once);
 
-				restMock.PrintReceivedRequests(" ", x => x.Method, x => x.Uri.ToString(), x => $"(body length: {x.Body.Length})");
+				restMock.PrintReceivedRequests();
 			}
 		}
 	}

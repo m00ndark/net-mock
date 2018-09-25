@@ -15,20 +15,30 @@ namespace NetMock.Rest
 		private readonly HttpListenerController _httpListener;
 		private readonly List<RestRequestSetup> _requestDefinitions;
 		private readonly List<IReceivedRequest> _receivedRequests;
+		private readonly List<Exception> _unexpectedExceptions;
 		private bool _isActivated;
 
-		internal RestMock(string basePath, int port, Scheme scheme, X509Certificate2 certificate = null)
+		internal RestMock(string basePath, int port, Scheme scheme, X509Certificate2 certificate = null, MockBehavior mockBehavior = MockBehavior.Loose)
 		{
 			_httpListener = new HttpListenerController(HandleRequest, certificate);
 			_requestDefinitions = new List<RestRequestSetup>();
 			_receivedRequests = new List<IReceivedRequest>();
+			_unexpectedExceptions = new List<Exception>();
 			_isActivated = false;
 
 			BasePath = basePath;
 			Port = port;
 			Scheme = scheme;
 			Certificate = certificate;
+			MockBehavior = mockBehavior;
 		}
+
+		public static IEnumerable<Func<IReceivedRequest, string>> DefaultRequestPrinterSelectors { get; } = new Func<IReceivedRequest, string>[]
+			{
+				x => x.Method,
+				x => x.Uri.ToString(),
+				x => $"(bodyLength: {x.Body.Length}, headers: [{string.Join(" | ", x.Headers.Select(y => $"{y.Key}={y.Value}"))}])"
+			};
 
 		public string BasePath { get; }
 		public int Port { get; }
@@ -38,6 +48,7 @@ namespace NetMock.Rest
 		public HttpStatusCode DefaultResponseStatusCode { get; set; } = HttpStatusCode.NotImplemented;
 		public UndefinedHandling UndefinedQueryParameterHandling { get; set; } = UndefinedHandling.Fail;
 		public UndefinedHandling UndefinedHeaderHandling { get; set; } = UndefinedHandling.Ignore;
+		public MockBehavior MockBehavior { get; set; }
 		public bool InterpretBodyAsJson { get; set; } = true;
 
 		internal Uri BaseUri => new UriBuilder(Scheme == Scheme.Http ? Uri.UriSchemeHttp : Uri.UriSchemeHttps, "localhost", Port, BasePath).Uri;
@@ -50,7 +61,6 @@ namespace NetMock.Rest
 			ParseRequestDefinitions();
 
 			_httpListener.StartListening(BaseUri, useWildcardHost: true);
-
 			_isActivated = true;
 		}
 
@@ -59,25 +69,43 @@ namespace NetMock.Rest
 			if (!_isActivated)
 				return;
 
-			_isActivated = false;
+			try
+			{
+				_isActivated = false;
+				_httpListener.StopListening();
 
-			_httpListener.StopListening();
+				if (_unexpectedExceptions.Any())
+					throw new InternalNetMockException("Unexpected exceptions caught", _unexpectedExceptions);
 
-			_receivedRequests.Clear();
-			_requestDefinitions.Clear();
+				if (MockBehavior == MockBehavior.Strict)
+				{
+					IEnumerable<IReceivedRequest> unmatchedRequests = _receivedRequests
+						.Where(request => _requestDefinitions.All(requestDefinition => !requestDefinition.Match(request, out IList<MatchResult> matchResult)))
+						.ToArray();
+
+					if (unmatchedRequests.Any())
+						throw new StrictMockException("With mock behavior Strict, all requests must have a corresponding setup", unmatchedRequests);
+				}
+			}
+			finally
+			{
+				_receivedRequests.Clear();
+				_requestDefinitions.Clear();
+				_unexpectedExceptions.Clear();
+			}
 		}
+
+		public void PrintReceivedRequests()
+			=> _receivedRequests.Print(DefaultRequestPrinterSelectors);
 
 		public void PrintReceivedRequests(params Func<IReceivedRequest, string>[] selectors)
-			=> PrintReceivedRequests("\t", selectors);
+			=> _receivedRequests.Print(selectors);
 
 		public void PrintReceivedRequests(string separator, params Func<IReceivedRequest, string>[] selectors)
-			=> PrintReceivedRequests(Console.WriteLine, separator, selectors);
+			=> _receivedRequests.Print(separator, selectors);
 
 		public void PrintReceivedRequests(Action<string> printer, string separator, params Func<IReceivedRequest, string>[] selectors)
-		{
-			foreach (IReceivedRequest receivedRequest in _receivedRequests)
-				printer(string.Join(separator, selectors.Select(selector => selector(receivedRequest))));
-		}
+			=> _receivedRequests.Print(printer, separator, selectors);
 
 		private void ParseRequestDefinitions()
 		{
@@ -114,6 +142,7 @@ namespace NetMock.Rest
 			}
 			catch (Exception ex)
 			{
+				_unexpectedExceptions.Add(ex);
 				throw new StatusCodeException(HttpStatusCode.InternalServerError, "Unhandled exception", ex);
 			}
 
