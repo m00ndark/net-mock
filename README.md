@@ -4,7 +4,7 @@ NetMock is a .NET network service mock framework, inspired by [Moq](https://gith
 
 ## Examples
 
-A set of examples to show usage and possibilities are part of the solution, available [here](https://github.com/m00ndark/net-mock/blob/master/src/NetMock/Tests/NetMock.Tests/RestMockTest.cs).
+A set of examples to show usage and possibilities are part of the solution, available [here](/src/Tests/NetMock.Tests/RestMockTest.cs).
 
 ## Status
 
@@ -33,8 +33,9 @@ Request verification | `Verify(Method method, string path, params IMatch[] match
 &nbsp; | `VerifyTrace(string path, params IMatch[] matches, Times times)` | &#10003;
 &nbsp; | `VerifyConnect(string path, params IMatch[] matches, Times times)` | &#10003;
 Response setup | `Returns(object body)` | &#10003;
-&nbsp; | `Returns(object body, params AttachedHeader[] headers)` |
-&nbsp; | `Returns(int statusCode, object body, params AttachedHeader[] headers)` |
+&nbsp; | `Returns(int statusCode, params AttachedHeader[] headers)` | &#10003;
+&nbsp; | `Returns(object body, params AttachedHeader[] headers)` | &#10003;
+&nbsp; | `Returns(int statusCode, object body, params AttachedHeader[] headers)` | &#10003;
 &nbsp; | `Returns<T1>(Func<T1, object> bodyProvider, params AttachedHeader[] headers)` |
 &nbsp; | `Returns<T1>(int statusCode, Func<T1, object> bodyProvider, params AttachedHeader[] headers)` |
 &nbsp; | `Returns<T1, T2>(Func<T1, T2, object> bodyProvider, params AttachedHeader[] headers)` |

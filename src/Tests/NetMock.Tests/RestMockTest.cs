@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using NetMock.Rest;
 using NetMock.Tests.Model;
@@ -53,7 +54,7 @@ namespace NetMock.Tests
 				// arrange
 				Message message = new Message("Running");
 				RestMock restMock = serviceMock.CreateSecureRestMock("/api/v1", 9001,
-					certificateThumbprint: "73f21fabb9f239159cfa76d42283200b55b74ed4",
+					certificateThumbprint: "78ac133aaf23b4d39e701b342cb5a5eb9a3924a0",
 					storeName: StoreName.My,
 					storeLocation: StoreLocation.LocalMachine);
 				restMock.Setup(Method.Get, "/alive").Returns(message);
@@ -144,7 +145,7 @@ namespace NetMock.Tests
 		}
 
 		[Test]
-		public void Scenario05_Body()
+		public void Scenario05_Body_PrintReceivedRequests()
 		{
 			using (ServiceMock serviceMock = new ServiceMock())
 			{
@@ -170,6 +171,61 @@ namespace NetMock.Tests
 				JsonAssert.AreEqual(responseMessage, response.Content);
 				restMock.VerifyPost("/message/reverse", Body.Is(requestMessage), Times.Once);
 				restMock.VerifyPost("/message/reverse", Body.Is("{ 'Text': 'torraP' }"), Times.Never);
+
+				restMock.PrintReceivedRequests(" ", x => x.Method, x => x.Uri.ToString(), x => $"(body length: {x.Body.Length})");
+			}
+		}
+
+		[Test]
+		public void Scenario06_NoResponseDefined_DefaultResponseStatusCode()
+		{
+			using (ServiceMock serviceMock = new ServiceMock())
+			{
+				// arrange
+				RestMock restMock = serviceMock.CreateRestMock("/api/v1", 9001);
+				restMock.DefaultResponseStatusCode = HttpStatusCode.NoContent;
+
+				restMock.Setup(Method.Get, "/alive");
+
+				serviceMock.Activate();
+
+				// act
+				IRestResponse response = _client.Get("/alive");
+
+				// assert
+				Assert.AreEqual(HttpStatusCode.NoContent, response.StatusCode);
+				JsonAssert.AreEqual(string.Empty, response.Content);
+				restMock.Verify(Method.Get, "/alive", Times.Once);
+
+				restMock.PrintReceivedRequests(" ", x => x.Method, x => x.Uri.ToString(), x => $"(body length: {x.Body.Length})");
+			}
+		}
+
+		[Test]
+		public void Scenario07_StatusCodeAndResponseHeaders()
+		{
+			using (ServiceMock serviceMock = new ServiceMock())
+			{
+				// arrange
+				Message requestMessage = new Message("Parrot");
+				Message responseMessage = new Message("torraP");
+				RestMock restMock = serviceMock.CreateRestMock("/api/v1", 9001);
+
+				restMock
+					.SetupPost("/message/reverse/store", Body.Is(requestMessage))
+					.Returns(HttpStatusCode.Created, ("X-Message-Mode", "normal"), ("X-Message-Case-Sensitive", "true"));
+
+				serviceMock.Activate();
+
+				// act
+				IRestResponse response = _client.Post("/message/reverse/store", body: JsonConvert.SerializeObject(requestMessage));
+
+				// assert
+				Assert.AreEqual(HttpStatusCode.Created, response.StatusCode);
+				CollectionAssert.Contains(response.Headers.Select(x => (x.Name, x.Value.ToString())), ("X-Message-Mode", "normal"));
+				CollectionAssert.Contains(response.Headers.Select(x => (x.Name, x.Value.ToString())), ("X-Message-Case-Sensitive", "true"));
+				JsonAssert.AreEqual(responseMessage, response.Content);
+				restMock.VerifyPost("/message/reverse/store", Body.Is(requestMessage), Times.Once);
 
 				restMock.PrintReceivedRequests(" ", x => x.Method, x => x.Uri.ToString(), x => $"(body length: {x.Body.Length})");
 			}

@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -8,12 +9,12 @@ using NetMock.Utils;
 
 namespace NetMock.Server
 {
-	public class HttpListenerController
+	internal class HttpListenerController
 	{
 		public const string WILDCARD_HOST = "://+";
 		public const string WILDCARD_HOST_REPLACEMENT = "://localhost";
 
-		private readonly Func<HttpListenerRequest, string> _requestCallback;
+		private readonly Func<HttpListenerRequest, HttpResponse> _requestCallback;
 		private readonly X509Certificate2 _certificate;
 		private HttpListener _httpListener;
 		private int _prefixPort;
@@ -23,7 +24,7 @@ namespace NetMock.Server
 			ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, errors) => true;
 		}
 
-		public HttpListenerController(Func<HttpListenerRequest, string> requestCallback, X509Certificate2 certificate = null)
+		public HttpListenerController(Func<HttpListenerRequest, HttpResponse> requestCallback, X509Certificate2 certificate = null)
 		{
 			if (!HttpListener.IsSupported)
 				throw new NotSupportedException("Needs Windows XP SP2, Server 2003 or later");
@@ -74,9 +75,9 @@ namespace NetMock.Server
 											if (context == null)
 												return;
 
-											string response = _requestCallback(context.Request);
+											HttpResponse response = _requestCallback(context.Request);
 
-											WriteResponse(context, response, 200);
+											WriteResponse(context, response.Body, response.StatusCode, response.Headers);
 										}
 										catch (StatusCodeException ex)
 										{
@@ -108,16 +109,24 @@ namespace NetMock.Server
 			}
 		}
 
-		private static void WriteResponse(HttpListenerContext context, string response, int statusCode)
+		private static void WriteResponse(HttpListenerContext context, string body, int statusCode, IDictionary<string, string> headers = null)
 		{
 			context.Response.StatusCode = statusCode;
 
-			if (response == null)
+			if (headers != null)
+			{
+				foreach (KeyValuePair<string, string> header in headers)
+				{
+					context.Response.Headers.Add(header.Key, header.Value);
+				}
+			}
+
+			if (body == null)
 				return;
 
-			byte[] responseBytes = Encoding.UTF8.GetBytes(response);
-			context.Response.ContentLength64 = responseBytes.Length;
-			context.Response.OutputStream.Write(responseBytes, 0, responseBytes.Length);
+			byte[] bodyBytes = Encoding.UTF8.GetBytes(body);
+			context.Response.ContentLength64 = bodyBytes.Length;
+			context.Response.OutputStream.Write(bodyBytes, 0, bodyBytes.Length);
 		}
 
 		public void StopListening()

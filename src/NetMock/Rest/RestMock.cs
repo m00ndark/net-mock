@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -83,8 +83,10 @@ namespace NetMock.Rest
 			_requestDefinitions.ForEach(requestDefinition => requestDefinition.Parse());
 		}
 
-		private string HandleRequest(HttpListenerRequest httpRequest)
+		private HttpResponse HandleRequest(HttpListenerRequest httpRequest)
 		{
+			HttpResponse response = new HttpResponse();
+
 			try
 			{
 				ReceivedRequest request = _receivedRequests.AddAndReturn(new ReceivedRequest(httpRequest));
@@ -98,11 +100,15 @@ namespace NetMock.Rest
 						})
 					.LastOrDefault(x => x.IsMatch);
 
-				if (matchedRequestDefinition != null)
+				if (matchedRequestDefinition?.RequestDefinition.Response != null)
 				{
-					// todo: handle scenario when .Response is null (no Returns method has been called)
 					object body = matchedRequestDefinition.RequestDefinition.Response.Body;
-					return body is string bodyStr ? bodyStr : JsonConvert.SerializeObject(body);
+					response.Body = body == null ? null : body is string bodyStr ? bodyStr : JsonConvert.SerializeObject(body);
+
+					response.StatusCode = matchedRequestDefinition.RequestDefinition.Response.StatusCode;
+
+					response.Headers = matchedRequestDefinition.RequestDefinition.Response.Headers?
+						.ToDictionary(header => header.Name, header => header.Value);
 				}
 			}
 			catch (Exception ex)
@@ -110,7 +116,12 @@ namespace NetMock.Rest
 				throw new StatusCodeException(HttpStatusCode.InternalServerError, "Unhandled exception", ex);
 			}
 
-			throw new StatusCodeException(DefaultResponseStatusCode);
+			if (response.StatusCode == -1)
+			{
+				response.StatusCode = (int) DefaultResponseStatusCode;
+			}
+
+			return response;
 		}
 	}
 }
