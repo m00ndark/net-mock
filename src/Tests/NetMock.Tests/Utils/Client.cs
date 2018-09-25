@@ -2,7 +2,8 @@ using System;
 using System.Collections.Generic;
 using RestSharp;
 
-namespace NetMock.Tests.Utils {
+namespace NetMock.Tests.Utils
+{
 	public class Client
 	{
 		public Client(string scheme, string baseUri, int port)
@@ -29,6 +30,7 @@ namespace NetMock.Tests.Utils {
 						: ParameterType.QueryString);
 				}
 			}
+
 			if (headers != null)
 			{
 				foreach (var header in headers)
@@ -36,11 +38,13 @@ namespace NetMock.Tests.Utils {
 					request.AddHeader(header.Key, header.Value);
 				}
 			}
+
 			if (body != null)
 			{
 				request.AddParameter(request.JsonSerializer.ContentType, body, ParameterType.RequestBody);
 				//request.AddBody(body);
 			}
+
 			return RestClient.Execute(request);
 		}
 
