@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using NetMock.Exceptions;
 using Newtonsoft.Json.Linq;
@@ -46,6 +46,9 @@ namespace NetMock.Rest
 			{
 				case BodyMatchOperation.Is:
 				{
+					if (Value == null)
+						break;
+
 					if (!interpretBodyAsJson)
 						break;
 

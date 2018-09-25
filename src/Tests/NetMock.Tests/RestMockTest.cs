@@ -27,7 +27,7 @@ namespace NetMock.Tests
 		}
 
 		[Test]
-		public void Scenario01_Simple()
+		public void Simple()
 		{
 			using (ServiceMock serviceMock = new ServiceMock())
 			{
@@ -47,7 +47,28 @@ namespace NetMock.Tests
 		}
 
 		[Test]
-		public void Scenario01_Simple_Secure()
+		public void Simple_NoBasePath()
+		{
+			using (ServiceMock serviceMock = new ServiceMock())
+			{
+				// arrange
+				const string responseBody = "{ 'state': 'alive' }";
+				RestMock restMock = serviceMock.CreateRestMock(9001);
+				restMock.Setup(Method.Get, "/alive").Returns(responseBody);
+				serviceMock.Activate();
+
+				// act
+				Client client = new Client(Uri.UriSchemeHttp, string.Empty, 9001);
+				IRestResponse response = client.Get("/alive");
+
+				// assert
+				JsonAssert.AreEqual(responseBody, response.Content);
+				restMock.Verify(Method.Get, "/alive", Times.Once);
+			}
+		}
+
+		[Test]
+		public void Simple_Secure()
 		{
 			using (ServiceMock serviceMock = new ServiceMock())
 			{
@@ -70,7 +91,7 @@ namespace NetMock.Tests
 		}
 
 		[Test]
-		public void Scenario02_UriSegmentParameter()
+		public void UriSegmentParameter()
 		{
 			using (ServiceMock serviceMock = new ServiceMock())
 			{
@@ -94,7 +115,7 @@ namespace NetMock.Tests
 		}
 
 		[Test]
-		public void Scenario03_QueryParameter()
+		public void QueryParameter()
 		{
 			using (ServiceMock serviceMock = new ServiceMock())
 			{
@@ -118,7 +139,7 @@ namespace NetMock.Tests
 		}
 
 		[Test]
-		public void Scenario04_UriSegmentParameter_QueryParameter()
+		public void UriSegmentParameter_QueryParameter()
 		{
 			using (ServiceMock serviceMock = new ServiceMock())
 			{
@@ -145,7 +166,7 @@ namespace NetMock.Tests
 		}
 
 		[Test]
-		public void Scenario05_Body_PrintReceivedRequests()
+		public void Body_NonMatchedRequests()
 		{
 			using (ServiceMock serviceMock = new ServiceMock())
 			{
@@ -177,7 +198,35 @@ namespace NetMock.Tests
 		}
 
 		[Test]
-		public void Scenario06_NoResponseDefined_DefaultResponseStatusCode()
+		public void BodyMatchByCondition()
+		{
+			using (ServiceMock serviceMock = new ServiceMock())
+			{
+				// arrange
+				Message requestMessage = new Message("Parrot");
+				Message responseMessage = new Message("torraP");
+				RestMock restMock = serviceMock.CreateRestMock("/api/v1", 9001);
+
+				restMock
+					.SetupPost("/message/reverse", Body.Is(body => body.Length > 0))
+					.Returns(responseMessage);
+
+				serviceMock.Activate();
+
+				// act
+				IRestResponse response = _client.Post("/message/reverse", body: JsonConvert.SerializeObject(requestMessage));
+
+				// assert
+				JsonAssert.AreEqual(responseMessage, response.Content);
+				restMock.VerifyPost("/message/reverse", Body.Is(requestMessage), Times.Once);
+				restMock.VerifyPost("/message/reverse", Body.Is("{ 'Text': 'torraP' }"), Times.Never);
+
+				restMock.PrintReceivedRequests(" ", x => x.Method, x => x.Uri.ToString(), x => $"(body length: {x.Body.Length})");
+			}
+		}
+
+		[Test]
+		public void NoResponseDefined_DefaultResponseStatusCode()
 		{
 			using (ServiceMock serviceMock = new ServiceMock())
 			{
@@ -202,7 +251,7 @@ namespace NetMock.Tests
 		}
 
 		[Test]
-		public void Scenario07_StatusCodeAndResponseHeaders()
+		public void StatusCodeAndResponseHeaders()
 		{
 			using (ServiceMock serviceMock = new ServiceMock())
 			{

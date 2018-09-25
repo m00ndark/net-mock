@@ -58,7 +58,7 @@ namespace NetMock.Server
 					: uriPrefix.ToString();
 
 				_httpListener = new HttpListener();
-				_httpListener.Prefixes.Add(prefix + '/');
+				_httpListener.Prefixes.Add(prefix.TrimEnd('/') + '/');
 				_httpListener.Start();
 
 				ThreadPool.QueueUserWorkItem(_ =>
