@@ -10,6 +10,12 @@ using Newtonsoft.Json;
 
 namespace NetMock.Rest
 {
+	public class StaticHeaders : Dictionary<string, string>
+	{
+		public void Add((string Name, string Value) header) => Add(header.Name, header.Value);
+		public void Remove((string Name, string Value) header) => Remove(header.Name);
+	}
+
 	public partial class RestMock : INetMock
 	{
 		private readonly HttpListenerController _httpListener;
@@ -34,6 +40,7 @@ namespace NetMock.Rest
 		public int Port { get; }
 		public Scheme Scheme { get; }
 		public X509Certificate2 Certificate { get; }
+		public StaticHeaders StaticHeaders { get; } = new StaticHeaders();
 		public HttpStatusCode DefaultResponseStatusCode { get; set; } = HttpStatusCode.NotImplemented;
 		public UndefinedHandling UndefinedQueryParameterHandling { get; set; } = UndefinedHandling.Fail;
 		public UndefinedHandling UndefinedHeaderHandling { get; set; } = UndefinedHandling.Ignore;
@@ -85,7 +92,7 @@ namespace NetMock.Rest
 
 		private HttpResponse HandleRequest(HttpListenerRequest httpRequest)
 		{
-			HttpResponse response = new HttpResponse();
+			HttpResponse response = new HttpResponse { Headers = StaticHeaders };
 
 			try
 			{
@@ -107,8 +114,8 @@ namespace NetMock.Rest
 
 					response.StatusCode = matchedRequestDefinition.RequestDefinition.Response.StatusCode;
 
-					response.Headers = matchedRequestDefinition.RequestDefinition.Response.Headers?
-						.ToDictionary(header => header.Name, header => header.Value);
+					response.Headers.Apply(matchedRequestDefinition.RequestDefinition.Response.Headers
+						.Select(header => (KeyValuePair<string, string>) header));
 				}
 			}
 			catch (Exception ex)

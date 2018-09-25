@@ -208,8 +208,8 @@ namespace NetMock.Tests
 			{
 				// arrange
 				Message requestMessage = new Message("Parrot");
-				Message responseMessage = new Message("torraP");
 				RestMock restMock = serviceMock.CreateRestMock("/api/v1", 9001);
+				restMock.StaticHeaders.Add(("Content-Type", "application/json"));
 
 				restMock
 					.SetupPost("/message/reverse/store", Body.Is(requestMessage))
@@ -224,7 +224,6 @@ namespace NetMock.Tests
 				Assert.AreEqual(HttpStatusCode.Created, response.StatusCode);
 				CollectionAssert.Contains(response.Headers.Select(x => (x.Name, x.Value.ToString())), ("X-Message-Mode", "normal"));
 				CollectionAssert.Contains(response.Headers.Select(x => (x.Name, x.Value.ToString())), ("X-Message-Case-Sensitive", "true"));
-				JsonAssert.AreEqual(responseMessage, response.Content);
 				restMock.VerifyPost("/message/reverse/store", Body.Is(requestMessage), Times.Once);
 
 				restMock.PrintReceivedRequests(" ", x => x.Method, x => x.Uri.ToString(), x => $"(body length: {x.Body.Length})");

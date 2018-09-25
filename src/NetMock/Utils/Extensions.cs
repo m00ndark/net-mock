@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -13,6 +13,17 @@ namespace NetMock.Utils
 		{
 			list.Add(item);
 			return item;
+		}
+
+		public static IDictionary<TKey, TValue> Apply<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, IEnumerable<KeyValuePair<TKey, TValue>> additionalKeyValuePairs)
+		{
+			if (additionalKeyValuePairs != null)
+			{
+				foreach (KeyValuePair<TKey, TValue> pair in additionalKeyValuePairs)
+					dictionary[pair.Key] = pair.Value;
+			}
+
+			return dictionary;
 		}
 
 		public static bool IsParameter(this string value, out string parameterName)

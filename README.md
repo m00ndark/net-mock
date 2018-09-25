@@ -14,6 +14,11 @@ The following table shows the implementation status of currenly planned features
 Component | Feature | Status
 --- | --- | ---
 HTTP methods | `Get `, `Post `, `Put `, `Delete `, `Head `, `Options `, `Trace `, `Connect` | &#10003;
+Configuration | `StaticHeaders` | &#10003;
+&nbsp; | `DefaultResponseStatusCode` | &#10003;
+&nbsp; | `UndefinedQueryParameterHandling` | &#10003;
+&nbsp; | `UndefinedHeaderHandling` | &#10003;
+&nbsp; | `InterpretBodyAsJson` | &#10003;
 Request setup | `Setup(Method method, string path, params IMatch[] matches)` | &#10003;
 &nbsp; | `SetupGet(string path, params IMatch[] matches)` | &#10003;
 &nbsp; | `SetupPost(string path, params IMatch[] matches)` | &#10003;
