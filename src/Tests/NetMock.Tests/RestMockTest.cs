@@ -80,7 +80,34 @@ namespace NetMock.Tests
 				// arrange
 				Message message = new Message("Running");
 				RestMock restMock = serviceMock.CreateSecureRestMock("/api/v1", 9001,
-					certificateThumbprint: "78ac133aaf23b4d39e701b342cb5a5eb9a3924a0",
+					certificateFindType: X509FindType.FindByThumbprint,
+					certificateFindValue: "78ac133aaf23b4d39e701b342cb5a5eb9a3924a0",
+					storeName: StoreName.My,
+					storeLocation: StoreLocation.LocalMachine);
+				restMock.Setup(Method.Get, "/alive").Returns(message);
+				serviceMock.Activate();
+
+				// act
+				IRestResponse response = _secureClient.Get("/alive");
+
+				// assert
+				JsonAssert.AreEqual(message, response.Content);
+				restMock.Verify(Method.Get, "/alive", Times.Once);
+
+				restMock.PrintReceivedRequests();
+			}
+		}
+
+		[Test]
+		public void Simple_Secure2()
+		{
+			using (ServiceMock serviceMock = new ServiceMock())
+			{
+				// arrange
+				Message message = new Message("Running");
+				RestMock restMock = serviceMock.CreateSecureRestMock("/api/v1", 9001,
+					certificateFindType: X509FindType.FindByExtension,
+					certificateFindValue: "1.3.6.1.5.5.7.13.3",
 					storeName: StoreName.My,
 					storeLocation: StoreLocation.LocalMachine);
 				restMock.Setup(Method.Get, "/alive").Returns(message);
