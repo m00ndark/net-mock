@@ -28,14 +28,15 @@ namespace NetMock.Tests
 		}
 
 		[Test]
-		public void Simple()
+		public void Simple_ManualActivation()
 		{
-			using (ServiceMock serviceMock = new ServiceMock())
+			using (ServiceMock serviceMock = new ServiceMock(ActivationStrategy.Manual))
 			{
 				// arrange
 				Message message = new Message("Running");
 				RestMock restMock = serviceMock.CreateRestMock("/api/v1", 9001);
 				restMock.Setup(Method.Get, "/alive").Returns(message);
+
 				serviceMock.Activate();
 
 				// act
@@ -58,7 +59,6 @@ namespace NetMock.Tests
 				const string responseBody = "{ 'state': 'alive' }";
 				RestMock restMock = serviceMock.CreateRestMock(9001);
 				restMock.Setup(Method.Get, "/alive").Returns(responseBody);
-				serviceMock.Activate();
 
 				// act
 				Client client = new Client(Uri.UriSchemeHttp, string.Empty, 9001);
@@ -85,7 +85,6 @@ namespace NetMock.Tests
 					storeName: StoreName.My,
 					storeLocation: StoreLocation.LocalMachine);
 				restMock.Setup(Method.Get, "/alive").Returns(message);
-				serviceMock.Activate();
 
 				// act
 				IRestResponse response = _secureClient.Get("/alive");
@@ -111,7 +110,6 @@ namespace NetMock.Tests
 					storeName: StoreName.My,
 					storeLocation: StoreLocation.LocalMachine);
 				restMock.Setup(Method.Get, "/alive").Returns(message);
-				serviceMock.Activate();
 
 				// act
 				IRestResponse response = _secureClient.Get("/alive");
@@ -137,8 +135,6 @@ namespace NetMock.Tests
 					.SetupGet("/message/{id}", Parameter.IsAny<Guid>("id"))
 					.Returns(message);
 
-				serviceMock.Activate();
-
 				// act
 				IRestResponse response = _client.Get("/message/e910015f-7026-402d-a0ef-cfa6fecab19f");
 
@@ -162,8 +158,6 @@ namespace NetMock.Tests
 				restMock
 					.SetupGet("/message?msgid={id}&x=y", Parameter.IsAny<Guid>("id"))
 					.Returns(message);
-
-				serviceMock.Activate();
 
 				// act
 				IRestResponse response = _client.Get("/message?msgid=e910015f-7026-402d-a0ef-cfa6fecab19f&x=y");
@@ -192,8 +186,6 @@ namespace NetMock.Tests
 						Parameter.Is("category", x => categories.Contains(x.ToUpper())))
 					.Returns(message);
 
-				serviceMock.Activate();
-
 				// act
 				IRestResponse response = _client.Get("/message/jam?msgid=e910015f-7026-402d-a0ef-cfa6fecab19f&x=y");
 
@@ -218,8 +210,6 @@ namespace NetMock.Tests
 				restMock
 					.SetupPost("/message/reverse", Body.Is(requestMessage))
 					.Returns(responseMessage);
-
-				serviceMock.Activate();
 
 				// act
 				IRestResponse response = _client.Post("/message/reverse", body: JsonConvert.SerializeObject(requestMessage));
@@ -251,8 +241,6 @@ namespace NetMock.Tests
 					.SetupPost("/message/reverse", Body.Is(requestMessage))
 					.Returns(responseMessage);
 
-				serviceMock.Activate();
-
 				// act
 				IRestResponse response = _client.Post("/message/reverse", body: JsonConvert.SerializeObject(requestMessage));
 
@@ -282,8 +270,6 @@ namespace NetMock.Tests
 					.SetupPost("/message/reverse", Body.Is(body => body.Length > 0))
 					.Returns(responseMessage);
 
-				serviceMock.Activate();
-
 				// act
 				IRestResponse response = _client.Post("/message/reverse", body: JsonConvert.SerializeObject(requestMessage));
 
@@ -306,8 +292,6 @@ namespace NetMock.Tests
 				restMock.DefaultResponseStatusCode = HttpStatusCode.NoContent;
 
 				restMock.Setup(Method.Get, "/alive");
-
-				serviceMock.Activate();
 
 				// act
 				IRestResponse response = _client.Get("/alive");
@@ -334,8 +318,6 @@ namespace NetMock.Tests
 				restMock
 					.SetupPost("/message/reverse/store", Body.Is(requestMessage))
 					.Returns(HttpStatusCode.Created, ("X-Message-Mode", "normal"), ("X-Message-Case-Sensitive", "true"));
-
-				serviceMock.Activate();
 
 				// act
 				IRestResponse response = _client.Post("/message/reverse/store", body: JsonConvert.SerializeObject(requestMessage));

@@ -18,7 +18,7 @@ namespace NetMock.Rest
 		private readonly List<Exception> _unexpectedExceptions;
 		private bool _isActivated;
 
-		internal RestMock(string basePath, int port, Scheme scheme, X509Certificate2 certificate = null, MockBehavior mockBehavior = MockBehavior.Loose)
+		internal RestMock(ServiceMock serviceMock, string basePath, int port, Scheme scheme, X509Certificate2 certificate = null, MockBehavior mockBehavior = MockBehavior.Loose)
 		{
 			_httpListener = new HttpListenerController(HandleRequest, certificate);
 			_requestDefinitions = new List<RestRequestSetup>();
@@ -26,6 +26,7 @@ namespace NetMock.Rest
 			_unexpectedExceptions = new List<Exception>();
 			_isActivated = false;
 
+			ServiceMock = serviceMock;
 			BasePath = basePath;
 			Port = port;
 			Scheme = scheme;
@@ -40,6 +41,7 @@ namespace NetMock.Rest
 				x => $"(bodyLength: {x.Body.Length}, headers: [{string.Join(" | ", x.Headers.Select(y => $"{y.Key}={y.Value}"))}])"
 			};
 
+		internal ServiceMock ServiceMock { get; }
 		public string BasePath { get; }
 		public int Port { get; }
 		public Scheme Scheme { get; }
@@ -58,7 +60,8 @@ namespace NetMock.Rest
 			if (_isActivated)
 				throw new InvalidOperationException("Already activated");
 
-			ParseRequestDefinitions();
+			if (ServiceMock.ActivationStrategy == ActivationStrategy.Manual)
+				ParseRequestDefinitions();
 
 			_httpListener.StartListening(BaseUri, useWildcardHost: true);
 			_isActivated = true;

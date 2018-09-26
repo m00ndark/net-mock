@@ -8,10 +8,11 @@ namespace NetMock.Utils
 {
 	public static class Extensions
 	{
-		public static TItem AddAndReturn<TList, TItem>(this ICollection<TList> list, TItem item)
+		public static TItem AddAndReturn<TList, TItem>(this ICollection<TList> list, TItem item, Action<TItem> action = null)
 			where TItem : TList
 		{
 			list.Add(item);
+			action?.Invoke(item);
 			return item;
 		}
 

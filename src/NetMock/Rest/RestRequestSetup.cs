@@ -7,7 +7,11 @@ namespace NetMock.Rest
 	public class RestRequestSetup : RestRequestDefinition
 	{
 		internal RestRequestSetup(RestMock restMock, Method method, string path, IMatch[] matches)
-			: base(restMock, method, path, matches) { }
+			: base(restMock, method, path, matches)
+		{
+			if (restMock.ServiceMock.ActivationStrategy == ActivationStrategy.AutomaticOnCreation)
+				Parse();
+		}
 
 		protected override string DefinitionType => "setup";
 

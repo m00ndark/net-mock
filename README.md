@@ -10,6 +10,17 @@ A set of examples to show usage and possibilities are part of the solution, avai
 
 The following table shows the implementation status of currenly planned features.
 
+### Service mock
+Component | Feature | Status
+--- | --- | ---
+Configuration | `ActivationStrategy`&nbsp;`{ Manual, AutomaticOnCreation }` (default is `AutomaticOnCreation`) | &#10003;
+Mock creation | `CreateRestMock(int port, MockBehavior mockBehavior)` | &#10003;
+&nbsp; | `CreateRestMock(string basePath, int port, MockBehavior mockBehavior)` | &#10003;
+&nbsp; | `CreateSecureRestMock(int port, X509FindType certificateFindType, string certificateFindValue, StoreName storeName, StoreLocation storeLocation, MockBehavior mockBehavior)` | &#10003;
+&nbsp; | `CreateSecureRestMock(string basePath, int port, X509FindType certificateFindType, string certificateFindValue, StoreName storeName, StoreLocation storeLocation, MockBehavior mockBehavior)` | &#10003;
+&nbsp; | `CreateSecureRestMock(int port, X509Certificate2 certificate, MockBehavior mockBehavior)` | &#10003;
+&nbsp; | `CreateSecureRestMock(string basePath, int port, X509Certificate2 certificate, MockBehavior mockBehavior)` | &#10003;
+
 ### REST mock
 Component | Feature | Status
 --- | --- | ---

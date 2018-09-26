@@ -16,7 +16,7 @@ namespace NetMock
 	{
 		private readonly List<INetMock> _mocks;
 
-		public ServiceMock(ActivationStrategy activationStrategy = ActivationStrategy.Manual)
+		public ServiceMock(ActivationStrategy activationStrategy = ActivationStrategy.AutomaticOnCreation)
 		{
 			ActivationStrategy = activationStrategy;
 			_mocks = new List<INetMock>();
@@ -29,7 +29,11 @@ namespace NetMock
 
 		public RestMock CreateRestMock(string basePath, int port, MockBehavior mockBehavior = MockBehavior.Loose)
 		{
-			return _mocks.AddAndReturn(new RestMock(basePath, port, Scheme.Http, mockBehavior: mockBehavior));
+			return _mocks.AddAndReturn(new RestMock(this, basePath, port, Scheme.Http, mockBehavior: mockBehavior), restMock =>
+				{
+					if (ActivationStrategy == ActivationStrategy.AutomaticOnCreation)
+						restMock.Activate();
+				});
 		}
 
 		public RestMock CreateSecureRestMock(int port, X509FindType certificateFindType, string certificateFindValue, StoreName storeName, StoreLocation storeLocation, MockBehavior mockBehavior = MockBehavior.Loose)
@@ -43,7 +47,11 @@ namespace NetMock
 
 		public RestMock CreateSecureRestMock(string basePath, int port, X509Certificate2 certificate, MockBehavior mockBehavior = MockBehavior.Loose)
 		{
-			return _mocks.AddAndReturn(new RestMock(basePath, port, Scheme.Https, certificate, mockBehavior));
+			return _mocks.AddAndReturn(new RestMock(this, basePath, port, Scheme.Https, certificate, mockBehavior), restMock =>
+				{
+					if (ActivationStrategy == ActivationStrategy.AutomaticOnCreation)
+						restMock.Activate();
+				});
 		}
 
 		public void Activate()
