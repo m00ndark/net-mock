@@ -72,7 +72,7 @@ namespace NetMock.Tests
 		}
 
 		[Test]
-		[Category("Secure")]
+		[Explicit]
 		public void Simple_Secure()
 		{
 			using (ServiceMock serviceMock = new ServiceMock())
@@ -96,7 +96,7 @@ namespace NetMock.Tests
 		}
 
 		[Test]
-		[Category("Secure")]
+		[Explicit]
 		public void Simple_Secure2()
 		{
 			using (ServiceMock serviceMock = new ServiceMock())
