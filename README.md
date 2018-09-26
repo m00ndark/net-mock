@@ -73,15 +73,15 @@ Parameter matching | `Parameter.Is(string name, string value, CompareCase compar
 &nbsp; | `Parameter.StartsWithWord(string name, string word, CompareCase compareCase)` | &#10003;
 &nbsp; | `Parameter.EndsWithWord(string name, string word, CompareCase compareCase)` | &#10003;
 &nbsp; | `Parameter.ContainsWord(string name, string word, CompareCase compareCase)` | &#10003;
-Header matching | `Header.Is(string name, string value, CompareCase compareCase)` | 
-&nbsp; | `Header.IsNot(string name, string value, CompareCase compareCase)` | 
-&nbsp; | `Header.IsSet(string name)` | 
-&nbsp; | `Header.IsNotSet(string name)` | 
+Header matching | `Header.Is(string name, string value, CompareCase compareCase)` |
+&nbsp; | `Header.IsNot(string name, string value, CompareCase compareCase)` |
+&nbsp; | `Header.IsSet(string name)` |
+&nbsp; | `Header.IsNotSet(string name)` |
 &nbsp; | `Header.Contains(string value, CompareCase compareCase)` |
 Body matching | `Body.Is(object value)` | &#10003;
 &nbsp; | `Body.Is(string value, CompareCase compareCase)` | &#10003;
 &nbsp; | `Body.Is(Func<string, bool> condition)` | &#10003;
-&nbsp; | `Body.Is<TValue>(Func<TValue, bool> condition)` | 
+&nbsp; | `Body.Is<TValue>(Func<TValue, bool> condition)` |
 &nbsp; | `Body.IsEmpty()` | &#10003;
 &nbsp; | `Body.IsNotEmpty()` | &#10003;
 &nbsp; | `Body.Contains(string value, CompareCase compareCase)` | &#10003;
