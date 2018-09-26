@@ -25,6 +25,7 @@ namespace NetMock.Tests
 		{
 			_client = new Client(Uri.UriSchemeHttp, "/api/v1", 9001);
 			_secureClient = new Client(Uri.UriSchemeHttps, "/api/v1", 9001);
+			ServiceMock.GlobalPrintReceivedRequestsOnTearDown = true;
 		}
 
 		[Test]
@@ -45,15 +46,13 @@ namespace NetMock.Tests
 				// assert
 				JsonAssert.AreEqual(message, response.Content);
 				restMock.Verify(Method.Get, "/alive", Times.Once);
-
-				restMock.PrintReceivedRequests();
 			}
 		}
 
 		[Test]
 		public void Simple_NoBasePath()
 		{
-			using (ServiceMock serviceMock = new ServiceMock())
+			using (ServiceMock serviceMock = new ServiceMock(printReceivedRequestsOnTearDown: false))
 			{
 				// arrange
 				const string responseBody = "{ 'state': 'alive' }";
@@ -68,12 +67,12 @@ namespace NetMock.Tests
 				JsonAssert.AreEqual(responseBody, response.Content);
 				restMock.Verify(Method.Get, "/alive", Times.Once);
 
-				restMock.PrintReceivedRequests();
+				serviceMock.PrintReceivedRequests();
 			}
 		}
 
 		[Test]
-		[Ignore("Thumbrprint value is certificate specific")]
+		[Category("Secure")]
 		public void Simple_Secure()
 		{
 			using (ServiceMock serviceMock = new ServiceMock())
@@ -93,13 +92,11 @@ namespace NetMock.Tests
 				// assert
 				JsonAssert.AreEqual(message, response.Content);
 				restMock.Verify(Method.Get, "/alive", Times.Once);
-
-				restMock.PrintReceivedRequests();
 			}
 		}
 
 		[Test]
-		[Ignore("Extension value is certificate specific")]
+		[Category("Secure")]
 		public void Simple_Secure2()
 		{
 			using (ServiceMock serviceMock = new ServiceMock())
@@ -119,8 +116,6 @@ namespace NetMock.Tests
 				// assert
 				JsonAssert.AreEqual(message, response.Content);
 				restMock.Verify(Method.Get, "/alive", Times.Once);
-
-				restMock.PrintReceivedRequests();
 			}
 		}
 
@@ -143,8 +138,6 @@ namespace NetMock.Tests
 				// assert
 				JsonAssert.AreEqual(message, response.Content);
 				restMock.VerifyGet("/message/{id}", Parameter.IsAny<Guid>("id"), Times.Once);
-
-				restMock.PrintReceivedRequests();
 			}
 		}
 
@@ -167,8 +160,6 @@ namespace NetMock.Tests
 				// assert
 				JsonAssert.AreEqual(message, response.Content);
 				restMock.VerifyGet("/message?msgid={id}&x=y", Parameter.IsAny<Guid>("id"), Times.Once);
-
-				restMock.PrintReceivedRequests();
 			}
 		}
 
@@ -194,8 +185,6 @@ namespace NetMock.Tests
 				// assert
 				JsonAssert.AreEqual(message, response.Content);
 				restMock.VerifyGet("/message/jam?msgid={id}&x=y", Parameter.IsAny<Guid>("id"), Times.Once);
-
-				restMock.PrintReceivedRequests();
 			}
 		}
 
@@ -224,15 +213,13 @@ namespace NetMock.Tests
 				JsonAssert.AreEqual(responseMessage, response.Content);
 				restMock.VerifyPost("/message/reverse", Body.Is(requestMessage), Times.Once);
 				restMock.VerifyPost("/message/reverse", Body.Is("{ 'Text': 'torraP' }"), Times.Never);
-
-				restMock.PrintReceivedRequests();
 			}
 		}
 
 		[Test]
 		public void RequestBody_MockBehaviorStrict_NonMatchedRequests()
 		{
-			using (ServiceMock serviceMock = new ServiceMock())
+			using (ServiceMock serviceMock = new ServiceMock(printReceivedRequestsOnTearDown: false))
 			{
 				// arrange
 				Message requestMessage = new Message("Parrot");
@@ -279,8 +266,6 @@ namespace NetMock.Tests
 				JsonAssert.AreEqual(responseMessage, response.Content);
 				restMock.VerifyPost("/message/reverse", Body.Is(requestMessage), Times.Once);
 				restMock.VerifyPost("/message/reverse", Body.Is("{ 'Text': 'torraP' }"), Times.Never);
-
-				restMock.PrintReceivedRequests();
 			}
 		}
 
@@ -302,8 +287,6 @@ namespace NetMock.Tests
 				Assert.AreEqual(HttpStatusCode.NoContent, response.StatusCode);
 				JsonAssert.AreEqual(string.Empty, response.Content);
 				restMock.Verify(Method.Get, "/alive", Times.Once);
-
-				restMock.PrintReceivedRequests();
 			}
 		}
 
@@ -329,8 +312,6 @@ namespace NetMock.Tests
 				CollectionAssert.Contains(response.Headers.Select(x => (x.Name, x.Value.ToString())), ("X-Message-Mode", "normal"));
 				CollectionAssert.Contains(response.Headers.Select(x => (x.Name, x.Value.ToString())), ("X-Message-Case-Sensitive", "true"));
 				restMock.VerifyPost("/message/reverse/store", Body.Is(requestMessage), Times.Once);
-
-				restMock.PrintReceivedRequests();
 			}
 		}
 	}
