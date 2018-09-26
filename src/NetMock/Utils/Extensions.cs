@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -8,11 +8,23 @@ namespace NetMock.Utils
 {
 	public static class Extensions
 	{
-		public static TItem AddAndReturn<TList, TItem>(this ICollection<TList> list, TItem item)
+		public static TItem AddAndReturn<TList, TItem>(this ICollection<TList> list, TItem item, Action<TItem> action = null)
 			where TItem : TList
 		{
 			list.Add(item);
+			action?.Invoke(item);
 			return item;
+		}
+
+		public static IDictionary<TKey, TValue> Apply<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, IEnumerable<KeyValuePair<TKey, TValue>> additionalKeyValuePairs)
+		{
+			if (additionalKeyValuePairs != null)
+			{
+				foreach (KeyValuePair<TKey, TValue> pair in additionalKeyValuePairs)
+					dictionary[pair.Key] = pair.Value;
+			}
+
+			return dictionary;
 		}
 
 		public static bool IsParameter(this string value, out string parameterName)

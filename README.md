@@ -4,16 +4,33 @@ NetMock is a .NET network service mock framework, inspired by [Moq](https://gith
 
 ## Examples
 
-A set of examples to show usage and possibilities are part of the solution, available [here](https://github.com/m00ndark/net-mock/blob/master/src/NetMock/Tests/NetMock.Tests/RestMockTest.cs).
+A set of examples to show usage and possibilities are part of the solution, available [here](/src/Tests/NetMock.Tests/RestMockTest.cs).
 
 ## Status
 
 The following table shows the implementation status of currenly planned features.
 
+### Service mock
+Component | Feature | Status
+--- | --- | ---
+Configuration | `ActivationStrategy`&nbsp;`{ Manual, AutomaticOnCreation }` (default is `AutomaticOnCreation`) | &#10003;
+Mock creation | `CreateRestMock(int port, MockBehavior mockBehavior)` | &#10003;
+&nbsp; | `CreateRestMock(string basePath, int port, MockBehavior mockBehavior)` | &#10003;
+&nbsp; | `CreateSecureRestMock(int port, X509FindType certificateFindType, string certificateFindValue, StoreName storeName, StoreLocation storeLocation, MockBehavior mockBehavior)` | &#10003;
+&nbsp; | `CreateSecureRestMock(string basePath, int port, X509FindType certificateFindType, string certificateFindValue, StoreName storeName, StoreLocation storeLocation, MockBehavior mockBehavior)` | &#10003;
+&nbsp; | `CreateSecureRestMock(int port, X509Certificate2 certificate, MockBehavior mockBehavior)` | &#10003;
+&nbsp; | `CreateSecureRestMock(string basePath, int port, X509Certificate2 certificate, MockBehavior mockBehavior)` | &#10003;
+
 ### REST mock
 Component | Feature | Status
 --- | --- | ---
 HTTP methods | `Get `, `Post `, `Put `, `Delete `, `Head `, `Options `, `Trace `, `Connect` | &#10003;
+Configuration | `StaticHeaders` | &#10003;
+&nbsp; | `DefaultResponseStatusCode` (default is `NotImplemented`) | &#10003;
+&nbsp; | `UndefinedQueryParameterHandling`&nbsp;`{ Ignore, Fail }` (default is `Fail`) | &#10003;
+&nbsp; | `UndefinedHeaderHandling`&nbsp;`{ Ignore, Fail }` (default is `Ignore`) | &#10003;
+&nbsp; | `MockBehavior`&nbsp;`{ Loose, Strict }` (default is `Loose`) | &#10003;
+&nbsp; | `InterpretBodyAsJson` (default is `true`) | &#10003;
 Request setup | `Setup(Method method, string path, params IMatch[] matches)` | &#10003;
 &nbsp; | `SetupGet(string path, params IMatch[] matches)` | &#10003;
 &nbsp; | `SetupPost(string path, params IMatch[] matches)` | &#10003;
@@ -33,8 +50,9 @@ Request verification | `Verify(Method method, string path, params IMatch[] match
 &nbsp; | `VerifyTrace(string path, params IMatch[] matches, Times times)` | &#10003;
 &nbsp; | `VerifyConnect(string path, params IMatch[] matches, Times times)` | &#10003;
 Response setup | `Returns(object body)` | &#10003;
-&nbsp; | `Returns(object body, params AttachedHeader[] headers)` |
-&nbsp; | `Returns(int statusCode, object body, params AttachedHeader[] headers)` |
+&nbsp; | `Returns(int statusCode, params AttachedHeader[] headers)` | &#10003;
+&nbsp; | `Returns(object body, params AttachedHeader[] headers)` | &#10003;
+&nbsp; | `Returns(int statusCode, object body, params AttachedHeader[] headers)` | &#10003;
 &nbsp; | `Returns<T1>(Func<T1, object> bodyProvider, params AttachedHeader[] headers)` |
 &nbsp; | `Returns<T1>(int statusCode, Func<T1, object> bodyProvider, params AttachedHeader[] headers)` |
 &nbsp; | `Returns<T1, T2>(Func<T1, T2, object> bodyProvider, params AttachedHeader[] headers)` |
@@ -55,15 +73,15 @@ Parameter matching | `Parameter.Is(string name, string value, CompareCase compar
 &nbsp; | `Parameter.StartsWithWord(string name, string word, CompareCase compareCase)` | &#10003;
 &nbsp; | `Parameter.EndsWithWord(string name, string word, CompareCase compareCase)` | &#10003;
 &nbsp; | `Parameter.ContainsWord(string name, string word, CompareCase compareCase)` | &#10003;
-Header matching | `Header.Is(string name, string value, CompareCase compareCase)` | 
-&nbsp; | `Header.IsNot(string name, string value, CompareCase compareCase)` | 
-&nbsp; | `Header.IsSet(string name)` | 
-&nbsp; | `Header.IsNotSet(string name)` | 
+Header matching | `Header.Is(string name, string value, CompareCase compareCase)` |
+&nbsp; | `Header.IsNot(string name, string value, CompareCase compareCase)` |
+&nbsp; | `Header.IsSet(string name)` |
+&nbsp; | `Header.IsNotSet(string name)` |
 &nbsp; | `Header.Contains(string value, CompareCase compareCase)` |
 Body matching | `Body.Is(object value)` | &#10003;
 &nbsp; | `Body.Is(string value, CompareCase compareCase)` | &#10003;
 &nbsp; | `Body.Is(Func<string, bool> condition)` | &#10003;
-&nbsp; | `Body.Is<TValue>(Func<TValue, bool> condition)` | 
+&nbsp; | `Body.Is<TValue>(Func<TValue, bool> condition)` |
 &nbsp; | `Body.IsEmpty()` | &#10003;
 &nbsp; | `Body.IsNotEmpty()` | &#10003;
 &nbsp; | `Body.Contains(string value, CompareCase compareCase)` | &#10003;

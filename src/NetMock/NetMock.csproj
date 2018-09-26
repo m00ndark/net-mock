@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Authors>Mattias Wijkström</Authors>
+    <PackageLicenseUrl>https://raw.github.com/m00ndark/net-mock/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/m00ndark/net-mock</PackageProjectUrl>
+    <Description>NetMock is a .NET network service mock framework, inspired by Moq syntax, providing the ability to mock REST and web socket APIs from within a test framework of choice.</Description>
+    <PackageTags>mock, framework, rest, websocket</PackageTags>
+    <RepositoryUrl>https://github.com/m00ndark/net-mock.git</RepositoryUrl>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <OutputPath>..\..\build\bin</OutputPath>
+    <IntermediateOutputPath>..\..\build\obj\</IntermediateOutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <OutputPath>..\..\build\bin</OutputPath>
+    <IntermediateOutputPath>..\..\build\obj\</IntermediateOutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Update="Rest\RestMock.*.cs">
+      <DependentUpon>Rest\RestMock.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Design">
+      <HintPath>C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\System.Design.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

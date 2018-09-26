@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -32,7 +32,7 @@ namespace NetMock.Rest
 
 		protected abstract string DefinitionType { get; }
 
-		private RestMock RestMock { get; }
+		internal RestMock RestMock { get; }
 		public Method Method { get; }
 		public string Path { get; }
 		public IMatch[] Matches { get; }

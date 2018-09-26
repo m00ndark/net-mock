@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
@@ -8,14 +8,20 @@ namespace NetMock.Utils
 {
 	internal static class CertificateUtil
 	{
-		public static X509Certificate2 LoadCertifiace(string certificateThumbprint, StoreName storeName, StoreLocation storeLocation)
+		public static X509Certificate2 LoadCertifiace(X509FindType findType, string findValue, StoreName storeName, StoreLocation storeLocation)
 		{
 			using (X509Store store = new X509Store(storeName, storeLocation))
 			{
 				store.Open(OpenFlags.ReadOnly);
-				return store.Certificates
-					.OfType<X509Certificate2>()
-					.FirstOrDefault(x => x.Thumbprint.Equals(certificateThumbprint, StringComparison.OrdinalIgnoreCase));
+				X509Certificate2Collection certificates = store.Certificates.Find(findType, findValue, true);
+
+				if (certificates.Count == 0)
+					throw new CertificateException($"Certificate not found: [{findType}:{findValue}] {storeName} @ {storeLocation}");
+
+				if (certificates.Count > 1)
+					throw new CertificateException($"Multiple matching certificates found: [{findType}:{findValue}] {storeName} @ {storeLocation}");
+
+				return certificates[0];
 			}
 		}
 
