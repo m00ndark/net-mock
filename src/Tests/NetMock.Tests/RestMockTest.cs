@@ -73,6 +73,7 @@ namespace NetMock.Tests
 		}
 
 		[Test]
+		[Ignore("Thumbrprint value is certificate specific")]
 		public void Simple_Secure()
 		{
 			using (ServiceMock serviceMock = new ServiceMock())
@@ -98,6 +99,7 @@ namespace NetMock.Tests
 		}
 
 		[Test]
+		[Ignore("Extension value is certificate specific")]
 		public void Simple_Secure2()
 		{
 			using (ServiceMock serviceMock = new ServiceMock())
