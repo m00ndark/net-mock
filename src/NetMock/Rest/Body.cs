@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace NetMock.Rest
 {
@@ -19,6 +19,15 @@ namespace NetMock.Rest
 		//public static IMatch Is<TValue>(Func<TValue, bool> condition)
 		//	=> new BodyMatch(BodyMatchOperation.Is, condition);
 
+		public static IMatch IsNot(object value)
+			=> new BodyMatch(BodyMatchOperation.IsNot, value);
+
+		public static IMatch IsNot(string value)
+			=> IsNot(value, CompareCase.Insensitive);
+
+		public static IMatch IsNot(string value, CompareCase compareCase)
+			=> new BodyMatch(BodyMatchOperation.IsNot, value, compareCase);
+
 		public static IMatch IsEmpty()
 			=> new BodyMatch(BodyMatchOperation.IsEmpty);
 
@@ -31,10 +40,22 @@ namespace NetMock.Rest
 		public static IMatch Contains(string value, CompareCase compareCase)
 			=> new BodyMatch(BodyMatchOperation.Contains, value, compareCase);
 
+		public static IMatch NotContains(string value)
+			=> NotContains(value, CompareCase.Insensitive);
+
+		public static IMatch NotContains(string value, CompareCase compareCase)
+			=> new BodyMatch(BodyMatchOperation.NotContains, value, compareCase);
+
 		public static IMatch ContainsWord(string word)
 			=> Contains(word, CompareCase.Insensitive);
 
 		public static IMatch ContainsWord(string word, CompareCase compareCase)
 			=> new BodyMatch(BodyMatchOperation.Contains, word, compareCase);
+
+		public static IMatch NotContainsWord(string word)
+			=> NotContainsWord(word, CompareCase.Insensitive);
+
+		public static IMatch NotContainsWord(string word, CompareCase compareCase)
+			=> new BodyMatch(BodyMatchOperation.NotContainsWord, word, compareCase);
 	}
 }

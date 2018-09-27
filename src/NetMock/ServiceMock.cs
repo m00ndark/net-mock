@@ -16,13 +16,22 @@ namespace NetMock
 	{
 		private readonly List<INetMock> _mocks;
 
+		public ServiceMock(bool printReceivedRequestsOnTearDown, ActivationStrategy activationStrategy = ActivationStrategy.AutomaticOnCreation)
+			: this(activationStrategy)
+		{
+			PrintReceivedRequestsOnTearDown = printReceivedRequestsOnTearDown;
+		}
+
 		public ServiceMock(ActivationStrategy activationStrategy = ActivationStrategy.AutomaticOnCreation)
 		{
 			ActivationStrategy = activationStrategy;
 			_mocks = new List<INetMock>();
 		}
 
+		public static bool GlobalPrintReceivedRequestsOnTearDown { get; set; } = false;
+
 		public ActivationStrategy ActivationStrategy { get; }
+		public bool? PrintReceivedRequestsOnTearDown { get; set; }
 
 		public RestMock CreateRestMock(int port, MockBehavior mockBehavior = MockBehavior.Loose)
 			=> CreateRestMock(string.Empty, port, mockBehavior);
@@ -54,6 +63,11 @@ namespace NetMock
 				});
 		}
 
+		public void PrintReceivedRequests()
+		{
+			_mocks.ForEach(mock => mock.PrintReceivedRequests());
+		}
+
 		public void Activate()
 		{
 			if (ActivationStrategy == ActivationStrategy.Manual)
@@ -62,7 +76,16 @@ namespace NetMock
 
 		public void TearDown()
 		{
-			_mocks.ForEach(mock => mock.TearDown());
+			foreach (INetMock mock in _mocks)
+			{
+				if (PrintReceivedRequestsOnTearDown == null && GlobalPrintReceivedRequestsOnTearDown
+					|| PrintReceivedRequestsOnTearDown != null && !PrintReceivedRequestsOnTearDown.Value)
+				{
+					mock.PrintReceivedRequests();
+				}
+
+				mock.TearDown();
+			}
 		}
 
 		public void Dispose()

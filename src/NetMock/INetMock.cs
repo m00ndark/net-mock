@@ -4,5 +4,6 @@ namespace NetMock
 	{
 		void Activate();
 		void TearDown();
+		void PrintReceivedRequests();
 	}
 }
