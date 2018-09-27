@@ -1,3 +1,5 @@
+[![Build Status](https://dev.azure.com/m00ndark/net-mock/_apis/build/status/net-mock-ci)](https://dev.azure.com/m00ndark/net-mock/_build/latest?definitionId=1)
+
 # net-mock
 
 NetMock is a .NET network service mock framework, inspired by [Moq](https://github.com/moq) syntax, providing the ability to mock REST and web socket APIs from within a test framework of choice.
