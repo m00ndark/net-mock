@@ -66,27 +66,36 @@ Response setup | `Returns(object body)` | &#10003;
 &nbsp; | `Returns<T1, T2, T3, T4, T5>(int statusCode, Func<T1, T2, T3, T4, T5, object> bodyProvider, params AttachedHeader[] headers)` |
 Parameter matching | `Parameter.Is(string name, string value, CompareCase compareCase)` | &#10003;
 &nbsp; | `Parameter.Is(string name, Func<string, bool> condition)` | &#10003;
+&nbsp; | `Parameter.IsNot(string name, string value, CompareCase compareCase)` | &#10003;
 &nbsp; | `Parameter.IsAny(string name)` | &#10003;
 &nbsp; | `Parameter.IsAny<TValue>(string name)` | &#10003;
 &nbsp; | `Parameter.StartsWith(string name, string value, CompareCase compareCase)` | &#10003;
 &nbsp; | `Parameter.EndsWith(string name, string value, CompareCase compareCase)` | &#10003;
 &nbsp; | `Parameter.Contains(string name, string value, CompareCase compareCase)` | &#10003;
+&nbsp; | `Parameter.NotContains(string name, string value, CompareCase compareCase)` | &#10003;
 &nbsp; | `Parameter.StartsWithWord(string name, string word, CompareCase compareCase)` | &#10003;
 &nbsp; | `Parameter.EndsWithWord(string name, string word, CompareCase compareCase)` | &#10003;
 &nbsp; | `Parameter.ContainsWord(string name, string word, CompareCase compareCase)` | &#10003;
-Header matching | `Header.Is(string name, string value, CompareCase compareCase)` |
-&nbsp; | `Header.IsNot(string name, string value, CompareCase compareCase)` |
-&nbsp; | `Header.IsSet(string name)` |
-&nbsp; | `Header.IsNotSet(string name)` |
-&nbsp; | `Header.Contains(string value, CompareCase compareCase)` |
+&nbsp; | `Parameter.NotContainsWord(string name, string word, CompareCase compareCase)` | &#10003;
+Header matching | `Header.Is(string name, string value, CompareCase compareCase)` | &#10003;
+&nbsp; | `Header.Is(string name, Func<string, bool> condition)` | &#10003;
+&nbsp; | `Header.IsNot(string name, string value, CompareCase compareCase)` | &#10003;
+&nbsp; | `Header.IsSet(string name)` | &#10003;
+&nbsp; | `Header.IsNotSet(string name)` | &#10003;
+&nbsp; | `Header.Contains(string name, string value, CompareCase compareCase)` | &#10003;
+&nbsp; | `Header.NotContains(string name, string value, CompareCase compareCase)` | &#10003;
 Body matching | `Body.Is(object value)` | &#10003;
 &nbsp; | `Body.Is(string value, CompareCase compareCase)` | &#10003;
 &nbsp; | `Body.Is(Func<string, bool> condition)` | &#10003;
 &nbsp; | `Body.Is<TValue>(Func<TValue, bool> condition)` |
+&nbsp; | `Body.IsNot(object value)` | &#10003;
+&nbsp; | `Body.IsNot(string value, CompareCase compareCase)` | &#10003;
 &nbsp; | `Body.IsEmpty()` | &#10003;
 &nbsp; | `Body.IsNotEmpty()` | &#10003;
 &nbsp; | `Body.Contains(string value, CompareCase compareCase)` | &#10003;
+&nbsp; | `Body.NotContains(string value, CompareCase compareCase)` | &#10003;
 &nbsp; | `Body.ContainsWord(string word, CompareCase compareCase)` | &#10003;
+&nbsp; | `Body.NotContainsWord(string word, CompareCase compareCase)` | &#10003;
 Verification hit count matching | `Times.Never` | &#10003;
 &nbsp; | `Times.Once` | &#10003;
 &nbsp; | `Times.Twice` | &#10003;

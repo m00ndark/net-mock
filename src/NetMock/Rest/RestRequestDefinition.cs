@@ -89,7 +89,10 @@ namespace NetMock.Rest
 					: (ParsedQueryParameter) new StaticQueryParameter(x.Name, x.Value))
 				.ToList() ?? new List<ParsedQueryParameter>();
 
-			// todo: parse headers here
+			_parsedHeaders = Matches
+				.OfType<HeaderMatch>()
+				.Select(headerMatch => new ParsedHeader(headerMatch.Name, headerMatch))
+				.ToList();
 
 			IList<BodyMatch> bodyMatches = Matches
 				.OfType<BodyMatch>()
@@ -131,7 +134,8 @@ namespace NetMock.Rest
 			if (!MatchQueryParameters(parameters, matchResult))
 				return false;
 
-			// todo: match body and headers here
+			if (!MatchHeaders(request.Headers, matchResult))
+				return false;
 
 			if (!MatchBody(request.Body, matchResult))
 				return false;
@@ -188,33 +192,40 @@ namespace NetMock.Rest
 
 		private bool MatchHeaders(IDictionary<string, string> headers, ICollection<MatchResult> matchResult)
 		{
-			//if (RestMock.UndefinedHeaderHandling == UndefinedHandling.Fail && headers.Count != _parsedQueryParameters.Count
-			//	|| RestMock.UndefinedHeaderHandling == UndefinedHandling.Ignore && headers.Count < _parsedQueryParameters.Count)
-			//{
-			//	return false;
-			//}
+			if (RestMock.UndefinedHeaderHandling == UndefinedHandling.Fail && headers.Count != _parsedHeaders.Count
+				|| RestMock.UndefinedHeaderHandling == UndefinedHandling.Ignore && headers.Count < _parsedHeaders.Count)
+			{
+				return false;
+			}
 
-			//HashSet<QueryParameter> matchedParameters = new HashSet<QueryParameter>();
-			//foreach (var parameter in headers)
-			//{
-			//	var result = _parsedQueryParameters
-			//		.Select(queryParameter => new
-			//			{
-			//				QueryParameter = queryParameter,
-			//				MatchResult = queryParameter.Match(parameter.Key, parameter.Value)
-			//			})
-			//		.FirstOrDefault(x => x.MatchResult.IsMatch && !matchedParameters.Contains(x.QueryParameter));
+			HashSet<ParsedHeader> matchedHeaders = new HashSet<ParsedHeader>();
+			foreach (var header in headers)
+			{
+				var result = _parsedHeaders
+					.Where(parsedHeader => parsedHeader.HeaderMatch.Operation != HeaderMatchOperation.IsNotSet)
+					.Select(parsedHeader => new
+						{
+							ParsedHeader = parsedHeader,
+							MatchResult = parsedHeader.Match(header.Key, header.Value)
+						})
+					.FirstOrDefault(x => x.MatchResult.IsMatch && !matchedHeaders.Contains(x.ParsedHeader));
 
-			//	if (result != null)
-			//	{
-			//		matchedParameters.Add(result.QueryParameter);
-			//		matchResult.Add(result.MatchResult);
-			//	}
-			//}
+				if (result != null)
+				{
+					matchedHeaders.Add(result.ParsedHeader);
+					matchResult.Add(result.MatchResult);
+				}
+			}
 
-			//return matchedParameters.Count == _parsedQueryParameters.Count;
+			foreach (ParsedHeader nonSetParsedHeader in _parsedHeaders
+				.Where(parsedHeader => parsedHeader.HeaderMatch.Operation == HeaderMatchOperation.IsNotSet)
+				.Where(parsedHeader => !headers.ContainsKey(parsedHeader.Name)))
+			{
+				matchedHeaders.Add(nonSetParsedHeader);
+				matchResult.Add(nonSetParsedHeader.HeaderMatch.Match(null));
+			}
 
-			throw new NotImplementedException();
+			return matchedHeaders.Count == _parsedHeaders.Count;
 		}
 
 		private bool MatchBody(string body, ICollection<MatchResult> matchResult)

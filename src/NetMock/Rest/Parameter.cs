@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace NetMock.Rest
 {
@@ -12,6 +12,12 @@ namespace NetMock.Rest
 
 		public static IMatch Is(string name, Func<string, bool> condition)
 			=> new ParameterMatch(ParameterMatchOperation.Is, name, condition);
+
+		public static IMatch IsNot(string name, string value)
+			=> IsNot(name, value, CompareCase.Insensitive);
+
+		public static IMatch IsNot(string name, string value, CompareCase compareCase)
+			=> new ParameterMatch(ParameterMatchOperation.IsNot, name, value, compareCase);
 
 		public static IMatch IsAny(string name)
 			=> IsAny<string>(name);
@@ -37,6 +43,12 @@ namespace NetMock.Rest
 		public static IMatch Contains(string name, string value, CompareCase compareCase)
 			=> new ParameterMatch(ParameterMatchOperation.Contains, name, value, compareCase);
 
+		public static IMatch NotContains(string name, string value)
+			=> NotContains(name, value, CompareCase.Insensitive);
+
+		public static IMatch NotContains(string name, string value, CompareCase compareCase)
+			=> new ParameterMatch(ParameterMatchOperation.NotContains, name, value, compareCase);
+
 		public static IMatch StartsWithWord(string name, string word)
 			=> StartsWithWord(name, word, CompareCase.Insensitive);
 
@@ -54,5 +66,11 @@ namespace NetMock.Rest
 
 		public static IMatch ContainsWord(string name, string word, CompareCase compareCase)
 			=> new ParameterMatch(ParameterMatchOperation.ContainsWord, name, word, compareCase);
+
+		public static IMatch NotContainsWord(string name, string word)
+			=> NotContainsWord(name, word, CompareCase.Insensitive);
+
+		public static IMatch NotContainsWord(string name, string word, CompareCase compareCase)
+			=> new ParameterMatch(ParameterMatchOperation.NotContainsWord, name, word, compareCase);
 	}
 }

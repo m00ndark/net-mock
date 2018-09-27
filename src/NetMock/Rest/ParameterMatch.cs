@@ -3,16 +3,19 @@ using System.Linq;
 
 namespace NetMock.Rest
 {
-	public enum ParameterMatchOperation
+	internal enum ParameterMatchOperation
 	{
 		Is,
+		IsNot,
 		IsAny,
 		StartsWith,
 		EndsWith,
 		Contains,
+		NotContains,
 		StartsWithWord,
 		EndsWithWord,
-		ContainsWord
+		ContainsWord,
+		NotContainsWord
 	}
 
 	internal class ParameterMatch : MatchBase
@@ -72,6 +75,13 @@ namespace NetMock.Rest
 					}
 					return new MatchResult(this, isMatch, value);
 				}
+				case ParameterMatchOperation.IsNot:
+				{
+					isMatch = !value.Equals(Value, CompareCase == CompareCase.Insensitive
+						? StringComparison.OrdinalIgnoreCase
+						: StringComparison.Ordinal);
+					return new MatchResult(this, isMatch, value);
+				}
 				case ParameterMatchOperation.IsAny:
 				{
 					object matchedValue = _typeConverters[ValueType](value);
@@ -96,6 +106,13 @@ namespace NetMock.Rest
 					isMatch = value.IndexOf(Value, CompareCase == CompareCase.Insensitive
 						? StringComparison.OrdinalIgnoreCase
 						: StringComparison.Ordinal) != -1;
+					return new MatchResult(this, isMatch, value);
+				}
+				case ParameterMatchOperation.NotContains:
+				{
+					isMatch = value.IndexOf(Value, CompareCase == CompareCase.Insensitive
+						? StringComparison.OrdinalIgnoreCase
+						: StringComparison.Ordinal) == -1;
 					return new MatchResult(this, isMatch, value);
 				}
 				case ParameterMatchOperation.StartsWithWord:
@@ -124,6 +141,16 @@ namespace NetMock.Rest
 						.Split(value)
 						.Where(word => !string.IsNullOrEmpty(word))
 						.Any(word => word.Equals(Value, CompareCase == CompareCase.Insensitive
+							? StringComparison.OrdinalIgnoreCase
+							: StringComparison.Ordinal));
+					return new MatchResult(this, isMatch, value);
+				}
+				case ParameterMatchOperation.NotContainsWord:
+				{
+					isMatch = _whitespaceRegex
+						.Split(value)
+						.Where(word => !string.IsNullOrEmpty(word))
+						.All(word => !word.Equals(Value, CompareCase == CompareCase.Insensitive
 							? StringComparison.OrdinalIgnoreCase
 							: StringComparison.Ordinal));
 					return new MatchResult(this, isMatch, value);

@@ -5,13 +5,16 @@ using Newtonsoft.Json.Linq;
 
 namespace NetMock.Rest
 {
-	public enum BodyMatchOperation
+	internal enum BodyMatchOperation
 	{
 		Is,
+		IsNot,
 		IsEmpty,
 		IsNotEmpty,
 		Contains,
-		ContainsWord
+		NotContains,
+		ContainsWord,
+		NotContainsWord
 	}
 
 	internal class BodyMatch : MatchBase
@@ -45,6 +48,7 @@ namespace NetMock.Rest
 			switch (Operation)
 			{
 				case BodyMatchOperation.Is:
+				case BodyMatchOperation.IsNot:
 				{
 					if (Value == null)
 						break;
@@ -72,7 +76,9 @@ namespace NetMock.Rest
 				case BodyMatchOperation.IsEmpty:
 				case BodyMatchOperation.IsNotEmpty:
 				case BodyMatchOperation.Contains:
+				case BodyMatchOperation.NotContains:
 				case BodyMatchOperation.ContainsWord:
+				case BodyMatchOperation.NotContainsWord:
 					break;
 			}
 			return this;
@@ -111,6 +117,27 @@ namespace NetMock.Rest
 					}
 					return new MatchResult(this, isMatch, value);
 				}
+				case BodyMatchOperation.IsNot:
+				{
+					if (JsonValue != null)
+					{
+						try
+						{
+							isMatch = !JToken.DeepEquals(JsonValue, JToken.Parse(value));
+						}
+						catch
+						{
+							isMatch = false;
+						}
+					}
+					else
+					{
+						isMatch = !value.Equals(Value as string ?? Value.ToString(), CompareCase == CompareCase.Insensitive
+							? StringComparison.OrdinalIgnoreCase
+							: StringComparison.Ordinal);
+					}
+					return new MatchResult(this, isMatch, value);
+				}
 				case BodyMatchOperation.IsEmpty:
 				{
 					return new MatchResult(this, string.IsNullOrEmpty(value), value);
@@ -126,12 +153,29 @@ namespace NetMock.Rest
 						: StringComparison.Ordinal) != -1;
 					return new MatchResult(this, isMatch, value);
 				}
+				case BodyMatchOperation.NotContains:
+				{
+					isMatch = value.IndexOf(Value as string ?? Value.ToString(), CompareCase == CompareCase.Insensitive
+						? StringComparison.OrdinalIgnoreCase
+						: StringComparison.Ordinal) == -1;
+					return new MatchResult(this, isMatch, value);
+				}
 				case BodyMatchOperation.ContainsWord:
 				{
 					isMatch = _whitespaceRegex
 						.Split(value)
 						.Where(word => !string.IsNullOrEmpty(word))
 						.Any(word => word.Equals(Value as string ?? Value.ToString(), CompareCase == CompareCase.Insensitive
+							? StringComparison.OrdinalIgnoreCase
+							: StringComparison.Ordinal));
+					return new MatchResult(this, isMatch, value);
+				}
+				case BodyMatchOperation.NotContainsWord:
+				{
+					isMatch = _whitespaceRegex
+						.Split(value)
+						.Where(word => !string.IsNullOrEmpty(word))
+						.All(word => !word.Equals(Value as string ?? Value.ToString(), CompareCase == CompareCase.Insensitive
 							? StringComparison.OrdinalIgnoreCase
 							: StringComparison.Ordinal));
 					return new MatchResult(this, isMatch, value);

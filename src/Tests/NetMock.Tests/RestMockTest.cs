@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
@@ -312,6 +313,33 @@ namespace NetMock.Tests
 				CollectionAssert.Contains(response.Headers.Select(x => (x.Name, x.Value.ToString())), ("X-Message-Mode", "normal"));
 				CollectionAssert.Contains(response.Headers.Select(x => (x.Name, x.Value.ToString())), ("X-Message-Case-Sensitive", "true"));
 				restMock.VerifyPost("/message/reverse/store", Body.Is(requestMessage), Times.Once);
+			}
+		}
+
+		[Test]
+		public void Headers()
+		{
+			using (ServiceMock serviceMock = new ServiceMock())
+			{
+				// arrange
+				Message message = new Message("Running");
+				RestMock restMock = serviceMock.CreateRestMock("/api/v1", 9001);
+				restMock
+					.SetupGet("/alive", Header.IsNotSet("X-Alive-State"), Header.Is("x-extra-data", value => value.Length == 6))
+					.Returns(message);
+
+				// act
+				IRestResponse response = _client.Get("/alive", headers: new Dictionary<string, string>
+					{
+						{ "X-Extra-Data", "NoLife" },
+						{ "X-Advanced-Config", "IncludeAfterLife" }
+					});
+
+				// assert
+				JsonAssert.AreEqual(message, response.Content);
+				restMock.VerifyGet("/alive", Header.IsSet("X-Advanced-Config"), Times.Once);
+				restMock.VerifyGet("/alive", Header.Contains("X-Advanced-Config", "After"), Times.Once);
+				restMock.VerifyPost("/alive", Header.IsSet("X-Advanced-Config"), Times.Never);
 			}
 		}
 	}
