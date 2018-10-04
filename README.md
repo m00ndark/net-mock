@@ -1,4 +1,4 @@
-[![Build Status](https://dev.azure.com/m00ndark/net-mock/_apis/build/status/net-mock-ci)](https://dev.azure.com/m00ndark/net-mock/_build/latest?definitionId=1)
+[![Build Status](https://dev.azure.com/m00ndark/net-mock/_apis/build/status/net-mock-ci)](https://dev.azure.com/m00ndark/net-mock/_build/latest?definitionId=1) [![NuGet Badge](https://buildstats.info/nuget/NetMock)](https://www.nuget.org/packages/NetMock/)
 
 # net-mock
 
