@@ -1,12 +1,13 @@
-﻿namespace NetMock.Tests.Model
-{
-    public class Message
-    {
-	    public Message(string text = null)
-	    {
-		    Text = text;
-	    }
+using System.Collections.Generic;
 
-	    public string Text { get; set; }
-    }
+namespace NetMock.Tests.Model
+{
+	public class Message : Dictionary<string, string>
+	{
+		public Message(string text = null)
+		{
+			if (text != null)
+				this["Text"] = text;
+		}
+	}
 }

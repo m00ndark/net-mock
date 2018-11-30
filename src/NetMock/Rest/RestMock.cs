@@ -78,7 +78,10 @@ namespace NetMock.Rest
 				_httpListener.StopListening();
 
 				if (_unexpectedExceptions.Any())
-					throw new InternalNetMockException("Unexpected exceptions caught", _unexpectedExceptions);
+				{
+					string exceptionOutput = _unexpectedExceptions.Aggregate(Environment.NewLine, (output, ex) => output + $"[{ex.GetType().Name}] {ex.Message.Replace(Environment.NewLine, " ")}{Environment.NewLine}{ex.StackTrace}{Environment.NewLine}");
+					throw new InternalNetMockException($"{Environment.NewLine}Unexpected exceptions caught:{exceptionOutput}", _unexpectedExceptions);
+				}
 
 				if (MockBehavior == MockBehavior.Strict)
 				{
@@ -123,7 +126,7 @@ namespace NetMock.Rest
 			{
 				ReceivedRequest request = _receivedRequests.AddAndReturn(new ReceivedRequest(httpRequest));
 
-				var matchedRequestDefinition = _requestDefinitions
+				var match = _requestDefinitions
 					.Select(requestDefinition => new
 						{
 							RequestDefinition = requestDefinition,
@@ -132,15 +135,18 @@ namespace NetMock.Rest
 						})
 					.LastOrDefault(x => x.IsMatch);
 
-				if (matchedRequestDefinition?.RequestDefinition.Response != null)
+				if (match?.RequestDefinition.Response != null)
 				{
-					object body = matchedRequestDefinition.RequestDefinition.Response.Body;
-					response.Body = body == null ? null : body is string bodyStr ? bodyStr : JsonConvert.SerializeObject(body);
+					(int StatusCode, string Body, IEnumerable<AttachedHeader> Headers) providedResponse =
+						match.RequestDefinition.Response.Provide(request, match.MatchResult);
 
-					response.StatusCode = matchedRequestDefinition.RequestDefinition.Response.StatusCode;
-
-					response.Headers.Apply(matchedRequestDefinition.RequestDefinition.Response.Headers
-						.Select(header => (KeyValuePair<string, string>) header));
+					response.StatusCode = providedResponse.StatusCode;
+					response.Headers.Apply(providedResponse.Headers?.Select(header => (KeyValuePair<string, string>) header));
+					response.Body = providedResponse.Body;
+				}
+				else
+				{
+					match?.RequestDefinition.TryCallback(request, match.MatchResult);
 				}
 			}
 			catch (Exception ex)

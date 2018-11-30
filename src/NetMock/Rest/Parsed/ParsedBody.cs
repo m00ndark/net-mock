@@ -1,10 +1,11 @@
-﻿namespace NetMock.Rest.Parsed
+namespace NetMock.Rest.Parsed
 {
 	internal class ParsedBody
 	{
 		public ParsedBody(BodyMatch bodyMatch, bool interpretBodyAsJson)
 		{
-			BodyMatch = bodyMatch.Parse(interpretBodyAsJson);
+			BodyMatch = bodyMatch;
+			BodyMatch.Parse(interpretBodyAsJson);
 		}
 
 		public BodyMatch BodyMatch { get; }

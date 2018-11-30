@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
-using System.Net;
+using System.Linq;
+using System.Reflection;
+using NetMock.Exceptions;
 
 namespace NetMock.Rest
 {
-	public class RestRequestSetup : RestRequestDefinition
+	public partial class RestRequestSetup : RestRequestDefinition
 	{
 		internal RestRequestSetup(RestMock restMock, Method method, string path, IMatch[] matches)
 			: base(restMock, method, path, matches)
@@ -15,72 +17,43 @@ namespace NetMock.Rest
 
 		protected override string DefinitionType => "setup";
 
-		public RestResponseDefinition Response { get; private set; }
+		internal RestResponseDefinition Response { get; private set; }
+		internal Delegate CallbackAction { get; private set; }
 
-		public RestResponseDefinition Returns(int statusCode, params AttachedHeader[] headers)
-			=> Response = new RestResponseDefinition(statusCode, headers);
+		private void SetCallback(Delegate callback)
+		{
+			ParameterInfo[] parameters = callback.Method.GetParameters();
+			bool firstParameterIsRequest = parameters.FirstOrDefault()?.ParameterType == typeof(IReceivedRequest);
+			int genericParameterCount = firstParameterIsRequest ? parameters.Length - 1 : parameters.Length;
 
-		public RestResponseDefinition Returns(HttpStatusCode statusCode, params AttachedHeader[] headers)
-			=> Response = new RestResponseDefinition((int) statusCode, headers);
+			if (genericParameterCount != Matches.Length)
+				throw new MockSetupException("Number of callback generic arguments does not match number of provided matches");
 
-		public RestResponseDefinition Returns(object body, params AttachedHeader[] headers)
-			=> Response = new RestResponseDefinition(body, headers);
+			Type[] parameterTypes = parameters.Select(x => x.ParameterType).Skip(firstParameterIsRequest ? 1 : 0).ToArray();
+			Type[] matchTypes = Matches.Select(x => x.GetType().GenericTypeArguments[0]).ToArray();
 
-		public RestResponseDefinition Returns(int statusCode, object body, params AttachedHeader[] headers)
-			=> Response = new RestResponseDefinition(statusCode, body, headers);
+			if (!parameterTypes.SequenceEqual(matchTypes))
+				throw new MockSetupException("Types of callback generic arguments does not match value types of provided matches: "
+					+ $"[Arguments: {string.Join(", ", parameterTypes.Select(x => x.Name))}] <-> [Matches: {string.Join(", ", matchTypes.Select(x => x.Name))}]");
 
-		public RestResponseDefinition Returns(HttpStatusCode statusCode, object body, params AttachedHeader[] headers)
-			=> Response = new RestResponseDefinition((int) statusCode, body, headers);
+			if (callback.Method.ReturnType != typeof(void))
+				throw new MockSetupException("Invalid callback delegate; return type should be void");
 
-		//public RestResponseDefinition Returns(Func<int> statusCodeProvider)
-		//	=> Response = new RestResponseDefinition(responseProvider);
+			CallbackAction = callback;
+		}
 
-		public RestResponseDefinition Returns(Func<(int, object, IEnumerable<AttachedHeader>)> responseProvider)
-			=> Response = new RestResponseDefinition(responseProvider);
+		internal void TryCallback(IReceivedRequest request, IList<MatchResult> matchResults)
+		{
+			if (CallbackAction == null)
+				return;
 
-		public RestResponseDefinition Returns<T1>(Func<T1, object> bodyProvider, params AttachedHeader[] headers)
-			=> Response = new RestResponseDefinition(bodyProvider, headers);
+			IEnumerable<object> args = Matches
+				.Select(match => matchResults.First(matchResult => matchResult.Match == match).MatchedValue);
 
-		public RestResponseDefinition Returns<T1>(int statusCode, Func<T1, object> bodyProvider, params AttachedHeader[] headers)
-			=> Response = new RestResponseDefinition(statusCode, bodyProvider, headers);
+			if (CallbackAction.Method.GetParameters().FirstOrDefault()?.ParameterType == typeof(IReceivedRequest))
+				args = args.Prepend(request);
 
-		public RestResponseDefinition Returns<T1>(HttpStatusCode statusCode, Func<T1, object> bodyProvider, params AttachedHeader[] headers)
-			=> Response = new RestResponseDefinition((int) statusCode, bodyProvider, headers);
-
-		public RestResponseDefinition Returns<T1, T2>(Func<T1, T2, object> bodyProvider, params AttachedHeader[] headers)
-			=> Response = new RestResponseDefinition(bodyProvider, headers);
-
-		public RestResponseDefinition Returns<T1, T2>(int statusCode, Func<T1, T2, object> bodyProvider, params AttachedHeader[] headers)
-			=> Response = new RestResponseDefinition(statusCode, bodyProvider, headers);
-
-		public RestResponseDefinition Returns<T1, T2>(HttpStatusCode statusCode, Func<T1, T2, object> bodyProvider, params AttachedHeader[] headers)
-			=> Response = new RestResponseDefinition((int) statusCode, bodyProvider, headers);
-
-		public RestResponseDefinition Returns<T1, T2, T3>(Func<T1, T2, T3, object> bodyProvider, params AttachedHeader[] headers)
-			=> Response = new RestResponseDefinition(bodyProvider, headers);
-
-		public RestResponseDefinition Returns<T1, T2, T3>(int statusCode, Func<T1, T2, T3, object> bodyProvider, params AttachedHeader[] headers)
-			=> Response = new RestResponseDefinition(statusCode, bodyProvider, headers);
-
-		public RestResponseDefinition Returns<T1, T2, T3>(HttpStatusCode statusCode, Func<T1, T2, T3, object> bodyProvider, params AttachedHeader[] headers)
-			=> Response = new RestResponseDefinition((int) statusCode, bodyProvider, headers);
-
-		public RestResponseDefinition Returns<T1, T2, T3, T4>(Func<T1, T2, T3, T4, object> bodyProvider, params AttachedHeader[] headers)
-			=> Response = new RestResponseDefinition(bodyProvider, headers);
-
-		public RestResponseDefinition Returns<T1, T2, T3, T4>(int statusCode, Func<T1, T2, T3, T4, object> bodyProvider, params AttachedHeader[] headers)
-			=> Response = new RestResponseDefinition(statusCode, bodyProvider, headers);
-
-		public RestResponseDefinition Returns<T1, T2, T3, T4>(HttpStatusCode statusCode, Func<T1, T2, T3, T4, object> bodyProvider, params AttachedHeader[] headers)
-			=> Response = new RestResponseDefinition((int) statusCode, bodyProvider, headers);
-
-		public RestResponseDefinition Returns<T1, T2, T3, T4, T5>(Func<T1, T2, T3, T4, T5, object> bodyProvider, params AttachedHeader[] headers)
-			=> Response = new RestResponseDefinition(bodyProvider, headers);
-
-		public RestResponseDefinition Returns<T1, T2, T3, T4, T5>(int statusCode, Func<T1, T2, T3, T4, T5, object> bodyProvider, params AttachedHeader[] headers)
-			=> Response = new RestResponseDefinition(statusCode, bodyProvider, headers);
-
-		public RestResponseDefinition Returns<T1, T2, T3, T4, T5>(HttpStatusCode statusCode, Func<T1, T2, T3, T4, T5, object> bodyProvider, params AttachedHeader[] headers)
-			=> Response = new RestResponseDefinition((int) statusCode, bodyProvider, headers);
+			CallbackAction.DynamicInvoke(args.ToArray());
+		}
 	}
 }

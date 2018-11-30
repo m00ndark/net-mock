@@ -18,43 +18,50 @@ namespace NetMock.Rest
 		NotContainsWord
 	}
 
-	internal class ParameterMatch : MatchBase
+	internal abstract class ParameterMatch : MatchBase
 	{
-		public ParameterMatch(ParameterMatchOperation operation, string name)
+		protected ParameterMatch(string name)
 		{
-			Operation = operation;
 			Name = name ?? throw new ArgumentNullException(nameof(name));
 		}
 
-		public ParameterMatch(ParameterMatchOperation operation, string name, string value, CompareCase compareCase)
-			: this(operation, name)
-		{
-			Value = value ?? throw new ArgumentNullException(nameof(value));
-			CompareCase = compareCase;
-		}
+		public string Name { get; }
+	}
 
-		public ParameterMatch(ParameterMatchOperation operation, string name, Type valueType)
-			: this(operation, name)
+	internal class ParameterMatch<TValue> : ParameterMatch
+	{
+		public ParameterMatch(ParameterMatchOperation operation, string name)
+			: base(name)
 		{
-			ValueType = valueType ?? throw new ArgumentNullException(nameof(valueType));
+			Operation = operation;
 
-			if (!_typeConverters.ContainsKey(ValueType))
-				throw new NotSupportedException($"Parameter conversion to {valueType.Name} not supported; supported types are "
+			if (operation == ParameterMatchOperation.IsAny && !_typeConverters.ContainsKey(typeof(TValue)))
+				throw new NotSupportedException($"Parameter conversion to {typeof(TValue).Name} not supported; supported types are "
 					+ string.Join(", ", _typeConverters.Keys.Select(type => type.Name)));
 		}
 
-		public ParameterMatch(ParameterMatchOperation operation, string name, Func<string, bool> condition)
+		public ParameterMatch(ParameterMatchOperation operation, string name, TValue value, CompareCase compareCase)
+			: this(operation, name)
+		{
+			if (value == null) // pattern matching not possible
+				throw new ArgumentNullException(nameof(value));
+
+			Value = value;
+			CompareCase = compareCase;
+		}
+
+		public ParameterMatch(ParameterMatchOperation operation, string name, Func<TValue, bool> condition)
 			: this(operation, name)
 		{
 			Condition = condition ?? throw new ArgumentNullException(nameof(condition));
 		}
 
 		public ParameterMatchOperation Operation { get; }
-		public string Name { get; }
-		public string Value { get; }
+		public TValue Value { get; }
 		public CompareCase CompareCase { get; }
-		public Type ValueType { get; }
-		public Func<string, bool> Condition { get; }
+		public Func<TValue, bool> Condition { get; }
+
+		private string StringValue => Value as string ?? Value.ToString();
 
 		public override MatchResult Match(string value)
 		{
@@ -65,52 +72,52 @@ namespace NetMock.Rest
 				{
 					if (Value != null)
 					{
-						isMatch = value.Equals(Value, CompareCase == CompareCase.Insensitive
+						isMatch = value.Equals(StringValue, CompareCase == CompareCase.Insensitive
 							? StringComparison.OrdinalIgnoreCase
 							: StringComparison.Ordinal);
+						return new MatchResult(this, isMatch, value);
 					}
-					else
-					{
-						isMatch = Condition(value);
-					}
-					return new MatchResult(this, isMatch, value);
+
+					object convertedValue = _typeConverters[typeof(TValue)](value);
+					isMatch = convertedValue != null && Condition((TValue) convertedValue);
+					return new MatchResult(this, isMatch, value, isMatch ? convertedValue : null);
 				}
 				case ParameterMatchOperation.IsNot:
 				{
-					isMatch = !value.Equals(Value, CompareCase == CompareCase.Insensitive
+					isMatch = !value.Equals(StringValue, CompareCase == CompareCase.Insensitive
 						? StringComparison.OrdinalIgnoreCase
 						: StringComparison.Ordinal);
 					return new MatchResult(this, isMatch, value);
 				}
 				case ParameterMatchOperation.IsAny:
 				{
-					object matchedValue = _typeConverters[ValueType](value);
+					object matchedValue = _typeConverters[typeof(TValue)](value);
 					return new MatchResult(this, matchedValue != null, value, matchedValue);
 				}
 				case ParameterMatchOperation.StartsWith:
 				{
-					isMatch = value.StartsWith(Value, CompareCase == CompareCase.Insensitive
+					isMatch = value.StartsWith(StringValue, CompareCase == CompareCase.Insensitive
 						? StringComparison.OrdinalIgnoreCase
 						: StringComparison.Ordinal);
 					return new MatchResult(this, isMatch, value);
 				}
 				case ParameterMatchOperation.EndsWith:
 				{
-					isMatch = value.EndsWith(Value, CompareCase == CompareCase.Insensitive
+					isMatch = value.EndsWith(StringValue, CompareCase == CompareCase.Insensitive
 						? StringComparison.OrdinalIgnoreCase
 						: StringComparison.Ordinal);
 					return new MatchResult(this, isMatch, value);
 				}
 				case ParameterMatchOperation.Contains:
 				{
-					isMatch = value.IndexOf(Value, CompareCase == CompareCase.Insensitive
+					isMatch = value.IndexOf(StringValue, CompareCase == CompareCase.Insensitive
 						? StringComparison.OrdinalIgnoreCase
 						: StringComparison.Ordinal) != -1;
 					return new MatchResult(this, isMatch, value);
 				}
 				case ParameterMatchOperation.NotContains:
 				{
-					isMatch = value.IndexOf(Value, CompareCase == CompareCase.Insensitive
+					isMatch = value.IndexOf(StringValue, CompareCase == CompareCase.Insensitive
 						? StringComparison.OrdinalIgnoreCase
 						: StringComparison.Ordinal) == -1;
 					return new MatchResult(this, isMatch, value);
@@ -120,7 +127,7 @@ namespace NetMock.Rest
 					string firstWord = _whitespaceRegex
 						.Split(value)
 						.FirstOrDefault(word => !string.IsNullOrEmpty(word));
-					isMatch = firstWord?.Equals(Value, CompareCase == CompareCase.Insensitive
+					isMatch = firstWord?.Equals(StringValue, CompareCase == CompareCase.Insensitive
 						? StringComparison.OrdinalIgnoreCase
 						: StringComparison.Ordinal) ?? false;
 					return new MatchResult(this, isMatch, value);
@@ -130,7 +137,7 @@ namespace NetMock.Rest
 					string lastWord = _whitespaceRegex
 						.Split(value)
 						.LastOrDefault(word => !string.IsNullOrEmpty(word));
-					isMatch = lastWord?.Equals(Value, CompareCase == CompareCase.Insensitive
+					isMatch = lastWord?.Equals(StringValue, CompareCase == CompareCase.Insensitive
 						? StringComparison.OrdinalIgnoreCase
 						: StringComparison.Ordinal) ?? false;
 					return new MatchResult(this, isMatch, value);
@@ -140,7 +147,7 @@ namespace NetMock.Rest
 					isMatch = _whitespaceRegex
 						.Split(value)
 						.Where(word => !string.IsNullOrEmpty(word))
-						.Any(word => word.Equals(Value, CompareCase == CompareCase.Insensitive
+						.Any(word => word.Equals(StringValue, CompareCase == CompareCase.Insensitive
 							? StringComparison.OrdinalIgnoreCase
 							: StringComparison.Ordinal));
 					return new MatchResult(this, isMatch, value);
@@ -150,7 +157,7 @@ namespace NetMock.Rest
 					isMatch = _whitespaceRegex
 						.Split(value)
 						.Where(word => !string.IsNullOrEmpty(word))
-						.All(word => !word.Equals(Value, CompareCase == CompareCase.Insensitive
+						.All(word => !word.Equals(StringValue, CompareCase == CompareCase.Insensitive
 							? StringComparison.OrdinalIgnoreCase
 							: StringComparison.Ordinal));
 					return new MatchResult(this, isMatch, value);

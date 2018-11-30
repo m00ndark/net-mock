@@ -9,6 +9,7 @@ namespace NetMock.Rest
 	{
 		Is,
 		IsNot,
+		IsAny,
 		IsEmpty,
 		IsNotEmpty,
 		Contains,
@@ -17,33 +18,47 @@ namespace NetMock.Rest
 		NotContainsWord
 	}
 
-	internal class BodyMatch : MatchBase
+	internal abstract class BodyMatch : MatchBase
+	{
+		internal abstract void Parse(bool interpretBodyAsJson);
+	}
+
+	internal class BodyMatch<TValue> : BodyMatch
 	{
 		public BodyMatch(BodyMatchOperation operation)
 		{
 			Operation = operation;
 		}
 
-		public BodyMatch(BodyMatchOperation operation, object value, CompareCase compareCase = CompareCase.Insensitive)
+		public BodyMatch(BodyMatchOperation operation, TValue value, CompareCase compareCase = CompareCase.Insensitive)
 			: this(operation)
 		{
-			Value = value ?? throw new ArgumentNullException(nameof(value));
+			if (value == null) // pattern matching not possible
+				throw new ArgumentNullException(nameof(value));
+
+			Value = value;
 			CompareCase = compareCase;
 		}
 
-		public BodyMatch(BodyMatchOperation operation, Func<string, bool> condition)
+		public BodyMatch(BodyMatchOperation operation, Func<TValue, bool> condition)
 			: this(operation)
 		{
 			Condition = condition ?? throw new ArgumentNullException(nameof(condition));
+
+			if (!_typeConverters.ContainsKey(typeof(TValue)))
+				throw new NotSupportedException($"Body conversion to {typeof(TValue).Name} not supported; supported types are "
+					+ string.Join(", ", _typeConverters.Keys.Select(type => type.Name)));
 		}
 
 		public BodyMatchOperation Operation { get; }
-		public object Value { get; }
+		public TValue Value { get; }
 		public CompareCase CompareCase { get; }
-		public Func<string, bool> Condition { get; }
+		public Func<TValue, bool> Condition { get; }
 		private JToken JsonValue { get; set; }
 
-		internal BodyMatch Parse(bool interpretBodyAsJson)
+		private string StringValue => Value as string ?? Value.ToString();
+
+		internal override void Parse(bool interpretBodyAsJson)
 		{
 			switch (Operation)
 			{
@@ -56,7 +71,7 @@ namespace NetMock.Rest
 					if (!interpretBodyAsJson)
 						break;
 
-					if (Value is string strValue)
+					if ((object) Value is string strValue)
 					{
 						try
 						{
@@ -73,6 +88,7 @@ namespace NetMock.Rest
 					}
 					break;
 				}
+				case BodyMatchOperation.IsAny:
 				case BodyMatchOperation.IsEmpty:
 				case BodyMatchOperation.IsNotEmpty:
 				case BodyMatchOperation.Contains:
@@ -81,7 +97,6 @@ namespace NetMock.Rest
 				case BodyMatchOperation.NotContainsWord:
 					break;
 			}
-			return this;
 		}
 
 		public override MatchResult Match(string value)
@@ -106,16 +121,16 @@ namespace NetMock.Rest
 						}
 						else
 						{
-							isMatch = value.Equals(Value as string ?? Value.ToString(), CompareCase == CompareCase.Insensitive
+							isMatch = value.Equals(StringValue, CompareCase == CompareCase.Insensitive
 								? StringComparison.OrdinalIgnoreCase
 								: StringComparison.Ordinal);
 						}
+						return new MatchResult(this, isMatch, value);
 					}
-					else
-					{
-						isMatch = Condition(value);
-					}
-					return new MatchResult(this, isMatch, value);
+
+					object convertedValue = _typeConverters[typeof(TValue)](value);
+					isMatch = convertedValue != null && Condition((TValue) convertedValue);
+					return new MatchResult(this, isMatch, value, isMatch ? convertedValue : null);
 				}
 				case BodyMatchOperation.IsNot:
 				{
@@ -132,11 +147,16 @@ namespace NetMock.Rest
 					}
 					else
 					{
-						isMatch = !value.Equals(Value as string ?? Value.ToString(), CompareCase == CompareCase.Insensitive
+						isMatch = !value.Equals(StringValue, CompareCase == CompareCase.Insensitive
 							? StringComparison.OrdinalIgnoreCase
 							: StringComparison.Ordinal);
 					}
 					return new MatchResult(this, isMatch, value);
+				}
+				case BodyMatchOperation.IsAny:
+				{
+					object matchedValue = _typeConverters[typeof(TValue)](value);
+					return new MatchResult(this, value == null || matchedValue != null, value, matchedValue);
 				}
 				case BodyMatchOperation.IsEmpty:
 				{
@@ -148,14 +168,14 @@ namespace NetMock.Rest
 				}
 				case BodyMatchOperation.Contains:
 				{
-					isMatch = value.IndexOf(Value as string ?? Value.ToString(), CompareCase == CompareCase.Insensitive
+					isMatch = value.IndexOf(StringValue, CompareCase == CompareCase.Insensitive
 						? StringComparison.OrdinalIgnoreCase
 						: StringComparison.Ordinal) != -1;
 					return new MatchResult(this, isMatch, value);
 				}
 				case BodyMatchOperation.NotContains:
 				{
-					isMatch = value.IndexOf(Value as string ?? Value.ToString(), CompareCase == CompareCase.Insensitive
+					isMatch = value.IndexOf(StringValue, CompareCase == CompareCase.Insensitive
 						? StringComparison.OrdinalIgnoreCase
 						: StringComparison.Ordinal) == -1;
 					return new MatchResult(this, isMatch, value);
@@ -165,7 +185,7 @@ namespace NetMock.Rest
 					isMatch = _whitespaceRegex
 						.Split(value)
 						.Where(word => !string.IsNullOrEmpty(word))
-						.Any(word => word.Equals(Value as string ?? Value.ToString(), CompareCase == CompareCase.Insensitive
+						.Any(word => word.Equals(StringValue, CompareCase == CompareCase.Insensitive
 							? StringComparison.OrdinalIgnoreCase
 							: StringComparison.Ordinal));
 					return new MatchResult(this, isMatch, value);
@@ -175,7 +195,7 @@ namespace NetMock.Rest
 					isMatch = _whitespaceRegex
 						.Split(value)
 						.Where(word => !string.IsNullOrEmpty(word))
-						.All(word => !word.Equals(Value as string ?? Value.ToString(), CompareCase == CompareCase.Insensitive
+						.All(word => !word.Equals(StringValue, CompareCase == CompareCase.Insensitive
 							? StringComparison.OrdinalIgnoreCase
 							: StringComparison.Ordinal));
 					return new MatchResult(this, isMatch, value);

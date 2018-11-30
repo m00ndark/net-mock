@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using Newtonsoft.Json;
 
 namespace NetMock.Utils
 {
@@ -59,6 +60,11 @@ namespace NetMock.Utils
 					return streamReader.ReadToEnd();
 				}
 			}
+		}
+
+		public static string ToStringBody(this object body)
+		{
+			return body == null ? null : body is string bodyStr ? bodyStr : JsonConvert.SerializeObject(body);
 		}
 	}
 }
