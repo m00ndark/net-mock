@@ -342,5 +342,126 @@ namespace NetMock.Tests
 				restMock.VerifyPost("/alive", Header.IsSet("X-Advanced-Config"), Times.Never);
 			}
 		}
+
+		[Test]
+		public void ResponseWithBodyProvider1()
+		{
+			using (ServiceMock serviceMock = new ServiceMock())
+			{
+				// arrange
+				RestMock restMock = serviceMock.CreateRestMock("/api/v1", 9001);
+
+				restMock
+					.SetupGet("/message/{category}?meta={includeMeta}",
+						Parameter.IsAny("category"),
+						Parameter.IsAny<bool>("includeMeta"))
+					.Returns<string, bool>((category, includeMeta) =>
+						(200, new Message { { "Category", category.ToUpper() }, { "IncludeMeta", includeMeta.ToString() } }));
+
+				// act
+				IRestResponse response = _client.Get("/message/jam?meta=true");
+
+				// assert
+				JsonAssert.AreEqual("{ \"Category\": \"JAM\", \"IncludeMeta\": \"True\" }", response.Content);
+				restMock.VerifyGet("/message/jam?meta={includeMeta}", Parameter.IsAny<bool>("includeMeta"), Times.Once);
+			}
+		}
+
+		[Test]
+		public void ResponseWithBodyProvider2()
+		{
+			using (ServiceMock serviceMock = new ServiceMock())
+			{
+				// arrange
+				RestMock restMock = serviceMock.CreateRestMock("/api/v1", 9001);
+
+				restMock
+					.SetupPost("/message/{category}",
+						Parameter.IsAny("category"))
+					.Returns<string>((request, category) =>
+						(201, new Message { { "Category", category.ToUpper() }, { "Owner", request.Headers.TryGetValue("X-Auth-User", out string user) ? user : null } }));
+
+				// act
+				IRestResponse response = _client.Post("/message/jam",
+					headers: new Dictionary<string, string> { { "X-Auth-User", "j.doe" } });
+
+				// assert
+				Assert.AreEqual(201, (int) response.StatusCode);
+				JsonAssert.AreEqual("{ \"Category\": \"JAM\", \"Owner\": \"j.doe\" }", response.Content);
+				restMock.VerifyPost("/message/jam", Header.IsSet("X-Auth-User"), Times.Once);
+			}
+		}
+
+		[Test]
+		public void ResponseWithBodyProvider3()
+		{
+			using (ServiceMock serviceMock = new ServiceMock())
+			{
+				// arrange
+				RestMock restMock = serviceMock.CreateRestMock("/api/v1", 9001);
+
+				restMock
+					.SetupPost("/message",
+						Body.IsNotEmpty(),
+						Header.IsSet("X-Category"))
+					.Returns<string, string>((body, category) => new Message($"Category: {category.ToUpper()}"));
+
+				Message requestMessage = new Message("Create-Category");
+
+				// act
+				IRestResponse response = _client.Post("/message",
+					headers: new Dictionary<string, string> { { "X-Category", "Cake" } },
+					body: JsonConvert.SerializeObject(requestMessage));
+
+				// assert
+				JsonAssert.AreEqual("{ \"Text\": \"Category: CAKE\" }", response.Content);
+				restMock.VerifyPost("/message", Body.IsNotEmpty(), Times.Once);
+			}
+		}
+
+		[Test]
+		public void Callback()
+		{
+			using (ServiceMock serviceMock = new ServiceMock())
+			{
+				// arrange
+				Dictionary<string, int> categoryHitCount = new Dictionary<string, int>();
+
+				void IncrementHitCount(string category)
+				{
+					if (categoryHitCount.ContainsKey(category))
+						categoryHitCount[category]++;
+					else
+						categoryHitCount[category] = 1;
+				}
+
+				RestMock restMock = serviceMock.CreateRestMock("/api/v1", 9001);
+
+				restMock
+					.SetupGet("/message/{category}?meta={includeMeta}",
+						Parameter.IsAny("category"),
+						Parameter.IsAny<bool>("includeMeta"))
+					.Callback<string, bool>((category, _) => IncrementHitCount(category.ToUpper()));
+
+				// act
+				for (int i = 0; i < 4; i++)
+				{
+					for (int j = 0; j < i + 1; j++)
+					{
+						_client.Get($"/message/cat{j + 1}?meta=true");
+					}
+				}
+
+				// assert
+				Assert.IsTrue(categoryHitCount.ContainsKey("CAT1"));
+				Assert.AreEqual(4, categoryHitCount["CAT1"]);
+				Assert.IsTrue(categoryHitCount.ContainsKey("CAT2"));
+				Assert.AreEqual(3, categoryHitCount["CAT2"]);
+				Assert.IsTrue(categoryHitCount.ContainsKey("CAT3"));
+				Assert.AreEqual(2, categoryHitCount["CAT3"]);
+				Assert.IsTrue(categoryHitCount.ContainsKey("CAT4"));
+				Assert.AreEqual(1, categoryHitCount["CAT4"]);
+			}
+		}
 	}
 }

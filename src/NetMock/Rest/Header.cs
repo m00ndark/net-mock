@@ -4,37 +4,40 @@ namespace NetMock.Rest
 {
 	public static class Header
 	{
-		public static IMatch Is(string name, string value)
+		public static IMatch Is<TValue>(string name, TValue value)
 			=> Is(name, value, CompareCase.Insensitive);
 
-		public static IMatch Is(string name, string value, CompareCase compareCase)
-			=> new HeaderMatch(HeaderMatchOperation.Is, name, value, compareCase);
+		public static IMatch Is<TValue>(string name, TValue value, CompareCase compareCase)
+			=> new HeaderMatch<TValue>(HeaderMatchOperation.Is, name, value, compareCase);
 
 		public static IMatch Is(string name, Func<string, bool> condition)
-			=> new HeaderMatch(HeaderMatchOperation.Is, name, condition);
+			=> Is<string>(name, condition);
 
-		public static IMatch IsNot(string name, string value)
+		public static IMatch Is<TValue>(string name, Func<TValue, bool> condition)
+			=> new HeaderMatch<TValue>(HeaderMatchOperation.Is, name, condition);
+
+		public static IMatch IsNot<TValue>(string name, TValue value)
 			=> IsNot(name, value, CompareCase.Insensitive);
 
-		public static IMatch IsNot(string name, string value, CompareCase compareCase)
-			=> new HeaderMatch(HeaderMatchOperation.IsNot, name, value, compareCase);
+		public static IMatch IsNot<TValue>(string name, TValue value, CompareCase compareCase)
+			=> new HeaderMatch<TValue>(HeaderMatchOperation.IsNot, name, value, compareCase);
 
 		public static IMatch IsSet(string name)
-			=> new HeaderMatch(HeaderMatchOperation.IsSet, name);
+			=> new HeaderMatch<string>(HeaderMatchOperation.IsSet, name);
 
 		public static IMatch IsNotSet(string name)
-			=> new HeaderMatch(HeaderMatchOperation.IsNotSet, name);
+			=> new HeaderMatch<string>(HeaderMatchOperation.IsNotSet, name);
 
-		public static IMatch Contains(string name, string value)
+		public static IMatch Contains<TValue>(string name, TValue value)
 			=> Contains(name, value, CompareCase.Insensitive);
 
-		public static IMatch Contains(string name, string value, CompareCase compareCase)
-			=> new HeaderMatch(HeaderMatchOperation.Contains, name, value, compareCase);
+		public static IMatch Contains<TValue>(string name, TValue value, CompareCase compareCase)
+			=> new HeaderMatch<TValue>(HeaderMatchOperation.Contains, name, value, compareCase);
 
-		public static IMatch NotContains(string name, string value)
+		public static IMatch NotContains<TValue>(string name, TValue value)
 			=> NotContains(name, value, CompareCase.Insensitive);
 
-		public static IMatch NotContains(string name, string value, CompareCase compareCase)
-			=> new HeaderMatch(HeaderMatchOperation.NotContains, name, value, compareCase);
+		public static IMatch NotContains<TValue>(string name, TValue value, CompareCase compareCase)
+			=> new HeaderMatch<TValue>(HeaderMatchOperation.NotContains, name, value, compareCase);
 	}
 }

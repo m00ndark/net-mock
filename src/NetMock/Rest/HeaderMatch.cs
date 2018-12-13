@@ -12,32 +12,43 @@ namespace NetMock.Rest
 		NotContains
 	}
 
-	internal class HeaderMatch : MatchBase
+	internal abstract class HeaderMatch : MatchBase
 	{
-		public HeaderMatch(HeaderMatchOperation operation, string name)
+		protected HeaderMatch(HeaderMatchOperation operation, string name)
 		{
 			Operation = operation;
 			Name = name ?? throw new ArgumentNullException(nameof(name));
 		}
 
-		public HeaderMatch(HeaderMatchOperation operation, string name, string value, CompareCase compareCase = CompareCase.Insensitive)
-			: this(operation, name)
+		public string Name { get; }
+		public HeaderMatchOperation Operation { get; }
+	}
+
+	internal class HeaderMatch<TValue> : HeaderMatch
+	{
+		public HeaderMatch(HeaderMatchOperation operation, string name) : base(operation, name) { }
+
+		public HeaderMatch(HeaderMatchOperation operation, string name, TValue value, CompareCase compareCase = CompareCase.Insensitive)
+			: base(operation, name)
 		{
-			Value = value ?? throw new ArgumentNullException(nameof(value));
+			if (value == null) // pattern matching not possible
+				throw new ArgumentNullException(nameof(value));
+
+			Value = value;
 			CompareCase = compareCase;
 		}
 
-		public HeaderMatch(HeaderMatchOperation operation, string name, Func<string, bool> condition)
+		public HeaderMatch(HeaderMatchOperation operation, string name, Func<TValue, bool> condition)
 			: this(operation, name)
 		{
 			Condition = condition ?? throw new ArgumentNullException(nameof(condition));
 		}
 
-		public HeaderMatchOperation Operation { get; }
-		public string Name { get; }
-		public string Value { get; }
+		public TValue Value { get; }
 		public CompareCase CompareCase { get; }
-		public Func<string, bool> Condition { get; }
+		public Func<TValue, bool> Condition { get; }
+
+		private string StringValue => Value as string ?? Value.ToString();
 
 		public override MatchResult Match(string value)
 		{
@@ -48,20 +59,19 @@ namespace NetMock.Rest
 				{
 					if (Value != null)
 					{
-						isMatch = value.Equals(Value, CompareCase == CompareCase.Insensitive
+						isMatch = value.Equals(StringValue, CompareCase == CompareCase.Insensitive
 							? StringComparison.OrdinalIgnoreCase
 							: StringComparison.Ordinal);
-					}
-					else
-					{
-						isMatch = Condition(value);
+						return new MatchResult(this, isMatch, value);
 					}
 
-					return new MatchResult(this, isMatch, value);
+					object convertedValue = _typeConverters[typeof(TValue)](value);
+					isMatch = convertedValue != null && Condition((TValue) convertedValue);
+					return new MatchResult(this, isMatch, value, isMatch ? convertedValue : null);
 				}
 				case HeaderMatchOperation.IsNot:
 				{
-					isMatch = !value.Equals(Value, CompareCase == CompareCase.Insensitive
+					isMatch = !value.Equals(StringValue, CompareCase == CompareCase.Insensitive
 						? StringComparison.OrdinalIgnoreCase
 						: StringComparison.Ordinal);
 					return new MatchResult(this, isMatch, value);
@@ -73,14 +83,14 @@ namespace NetMock.Rest
 				}
 				case HeaderMatchOperation.Contains:
 				{
-					isMatch = value.IndexOf(Value, CompareCase == CompareCase.Insensitive
+					isMatch = value.IndexOf(StringValue, CompareCase == CompareCase.Insensitive
 						? StringComparison.OrdinalIgnoreCase
 						: StringComparison.Ordinal) != -1;
 					return new MatchResult(this, isMatch, value);
 				}
 				case HeaderMatchOperation.NotContains:
 				{
-					isMatch = value.IndexOf(Value, CompareCase == CompareCase.Insensitive
+					isMatch = value.IndexOf(StringValue, CompareCase == CompareCase.Insensitive
 						? StringComparison.OrdinalIgnoreCase
 						: StringComparison.Ordinal) == -1;
 					return new MatchResult(this, isMatch, value);
