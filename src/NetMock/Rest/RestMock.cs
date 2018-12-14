@@ -6,24 +6,38 @@ using System.Security.Cryptography.X509Certificates;
 using NetMock.Exceptions;
 using NetMock.Server;
 using NetMock.Utils;
-using Newtonsoft.Json;
 
 namespace NetMock.Rest
 {
 	public partial class RestMock : INetMock
 	{
+		public static class GlobalConfig
+		{
+			public static HttpStatusCode DefaultResponseStatusCode { get; set; } = HttpStatusCode.NotImplemented;
+			public static UndefinedHandling UndefinedQueryParameterHandling { get; set; } = UndefinedHandling.Fail;
+			public static UndefinedHandling UndefinedHeaderHandling { get; set; } = UndefinedHandling.Ignore;
+			public static MockBehavior? MockBehavior { get; set; } = null;
+			public static bool InterpretBodyAsJson { get; set; } = true;
+		}
+
 		private readonly HttpListenerController _httpListener;
 		private readonly List<RestRequestSetup> _requestDefinitions;
 		private readonly List<IReceivedRequest> _receivedRequests;
 		private readonly List<Exception> _unexpectedExceptions;
+		private HttpStatusCode? _defaultResponseStatusCode;
+		private UndefinedHandling? _undefinedQueryParameterHandling;
+		private UndefinedHandling? _undefinedHeaderHandling;
+		private MockBehavior? _mockBehavior;
+		private bool? _interpretBodyAsJson;
 		private bool _isActivated;
 
-		internal RestMock(ServiceMock serviceMock, string basePath, int port, Scheme scheme, X509Certificate2 certificate = null, MockBehavior mockBehavior = MockBehavior.Loose)
+		internal RestMock(ServiceMock serviceMock, string basePath, int port, Scheme scheme, X509Certificate2 certificate = null, MockBehavior? mockBehavior = null)
 		{
 			_httpListener = new HttpListenerController(HandleRequest, certificate);
 			_requestDefinitions = new List<RestRequestSetup>();
 			_receivedRequests = new List<IReceivedRequest>();
 			_unexpectedExceptions = new List<Exception>();
+			_mockBehavior = mockBehavior;
 			_isActivated = false;
 
 			ServiceMock = serviceMock;
@@ -31,7 +45,6 @@ namespace NetMock.Rest
 			Port = port;
 			Scheme = scheme;
 			Certificate = certificate;
-			MockBehavior = mockBehavior;
 		}
 
 		public static IEnumerable<Func<IReceivedRequest, string>> DefaultRequestPrinterSelectors { get; } = new Func<IReceivedRequest, string>[]
@@ -47,11 +60,36 @@ namespace NetMock.Rest
 		public Scheme Scheme { get; }
 		public X509Certificate2 Certificate { get; }
 		public StaticHeaders StaticHeaders { get; } = new StaticHeaders();
-		public HttpStatusCode DefaultResponseStatusCode { get; set; } = HttpStatusCode.NotImplemented;
-		public UndefinedHandling UndefinedQueryParameterHandling { get; set; } = UndefinedHandling.Fail;
-		public UndefinedHandling UndefinedHeaderHandling { get; set; } = UndefinedHandling.Ignore;
-		public MockBehavior MockBehavior { get; set; }
-		public bool InterpretBodyAsJson { get; set; } = true;
+
+		public HttpStatusCode DefaultResponseStatusCode
+		{
+			get => _defaultResponseStatusCode ?? GlobalConfig.DefaultResponseStatusCode;
+			set => _defaultResponseStatusCode = value;
+		}
+
+		public UndefinedHandling UndefinedQueryParameterHandling
+		{
+			get => _undefinedQueryParameterHandling ?? GlobalConfig.UndefinedQueryParameterHandling;
+			set => _undefinedQueryParameterHandling = value;
+		}
+
+		public UndefinedHandling UndefinedHeaderHandling
+		{
+			get => _undefinedHeaderHandling ?? GlobalConfig.UndefinedHeaderHandling;
+			set => _undefinedHeaderHandling = value;
+		}
+
+		public MockBehavior MockBehavior
+		{
+			get => _mockBehavior ?? GlobalConfig.MockBehavior ?? ServiceMock.MockBehavior;
+			set => _mockBehavior = value;
+		}
+
+		public bool InterpretBodyAsJson
+		{
+			get => _interpretBodyAsJson ?? GlobalConfig.InterpretBodyAsJson;
+			set => _interpretBodyAsJson = value;
+		}
 
 		internal Uri BaseUri => new UriBuilder(Scheme == Scheme.Http ? Uri.UriSchemeHttp : Uri.UriSchemeHttps, "localhost", Port, BasePath).Uri;
 
