@@ -13,6 +13,7 @@ namespace NetMock.Rest
 	{
 		public static class GlobalConfig
 		{
+			public static StaticHeaders StaticResponseHeaders { get; } = new StaticHeaders();
 			public static HttpStatusCode DefaultResponseStatusCode { get; set; } = HttpStatusCode.NotImplemented;
 			public static UndefinedHandling UndefinedQueryParameterHandling { get; set; } = UndefinedHandling.Fail;
 			public static UndefinedHandling UndefinedHeaderHandling { get; set; } = UndefinedHandling.Ignore;
@@ -59,7 +60,7 @@ namespace NetMock.Rest
 		public int Port { get; }
 		public Scheme Scheme { get; }
 		public X509Certificate2 Certificate { get; }
-		public StaticHeaders StaticHeaders { get; } = new StaticHeaders();
+		public StaticHeaders StaticResponseHeaders { get; } = new StaticHeaders();
 
 		public HttpStatusCode DefaultResponseStatusCode
 		{
@@ -158,7 +159,7 @@ namespace NetMock.Rest
 
 		private HttpResponse HandleRequest(HttpListenerRequest httpRequest)
 		{
-			HttpResponse response = new HttpResponse { Headers = StaticHeaders };
+			HttpResponse response = new HttpResponse { Headers = StaticResponseHeaders.MergeWith(GlobalConfig.StaticResponseHeaders) };
 
 			try
 			{

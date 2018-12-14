@@ -299,7 +299,7 @@ namespace NetMock.Tests
 				// arrange
 				Message requestMessage = new Message("Parrot");
 				RestMock restMock = serviceMock.CreateRestMock("/api/v1", 9001);
-				restMock.StaticHeaders.Add(("Content-Type", "application/json"));
+				restMock.StaticResponseHeaders.Add(("Content-Type", "application/json"));
 
 				restMock
 					.SetupPost("/message/reverse/store", Body.Is(requestMessage))
