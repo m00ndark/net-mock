@@ -14,24 +14,43 @@ namespace NetMock
 
 	public class ServiceMock : IDisposable
 	{
+		public static class GlobalConfig
+		{
+			public static ActivationStrategy ActivationStrategy { get; set; } = ActivationStrategy.AutomaticOnCreation;
+			public static MockBehavior MockBehavior { get; set; } = MockBehavior.Loose;
+			public static bool PrintReceivedRequestsOnTearDown { get; set; } = false;
+		}
+
 		private readonly List<INetMock> _mocks;
+		private ActivationStrategy? _activationStrategy;
+		private MockBehavior? _mockBehavior;
+		private bool? _printReceivedRequestsOnTearDown;
 
-		public ServiceMock(bool printReceivedRequestsOnTearDown, ActivationStrategy activationStrategy = ActivationStrategy.AutomaticOnCreation)
-			: this(activationStrategy)
+		public ServiceMock(ActivationStrategy? activationStrategy = null, MockBehavior? mockBehavior = null, bool? printReceivedRequestsOnTearDown = null)
 		{
-			PrintReceivedRequestsOnTearDown = printReceivedRequestsOnTearDown;
-		}
-
-		public ServiceMock(ActivationStrategy activationStrategy = ActivationStrategy.AutomaticOnCreation)
-		{
-			ActivationStrategy = activationStrategy;
 			_mocks = new List<INetMock>();
+			_activationStrategy = activationStrategy;
+			_mockBehavior = mockBehavior;
+			_printReceivedRequestsOnTearDown = printReceivedRequestsOnTearDown;
 		}
 
-		public static bool GlobalPrintReceivedRequestsOnTearDown { get; set; } = false;
+		public ActivationStrategy ActivationStrategy
+		{
+			get => _activationStrategy ?? GlobalConfig.ActivationStrategy;
+			set => _activationStrategy = value;
+		}
 
-		public ActivationStrategy ActivationStrategy { get; }
-		public bool? PrintReceivedRequestsOnTearDown { get; set; }
+		public MockBehavior MockBehavior
+		{
+			get => _mockBehavior ?? GlobalConfig.MockBehavior;
+			set => _mockBehavior = value;
+		}
+
+		public bool PrintReceivedRequestsOnTearDown
+		{
+			get => _printReceivedRequestsOnTearDown ?? GlobalConfig.PrintReceivedRequestsOnTearDown;
+			set => _printReceivedRequestsOnTearDown = value;
+		}
 
 		public RestMock CreateRestMock(int port, MockBehavior mockBehavior = MockBehavior.Loose)
 			=> CreateRestMock(string.Empty, port, mockBehavior);
@@ -78,11 +97,8 @@ namespace NetMock
 		{
 			foreach (INetMock mock in _mocks)
 			{
-				if (PrintReceivedRequestsOnTearDown == null && GlobalPrintReceivedRequestsOnTearDown
-					|| PrintReceivedRequestsOnTearDown != null && !PrintReceivedRequestsOnTearDown.Value)
-				{
+				if (PrintReceivedRequestsOnTearDown)
 					mock.PrintReceivedRequests();
-				}
 
 				mock.TearDown();
 			}

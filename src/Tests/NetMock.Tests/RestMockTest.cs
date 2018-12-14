@@ -26,7 +26,7 @@ namespace NetMock.Tests
 		{
 			_client = new Client(Uri.UriSchemeHttp, "/api/v1", 9001);
 			_secureClient = new Client(Uri.UriSchemeHttps, "/api/v1", 9001);
-			ServiceMock.GlobalPrintReceivedRequestsOnTearDown = true;
+			ServiceMock.GlobalConfig.PrintReceivedRequestsOnTearDown = true;
 		}
 
 		[Test]
