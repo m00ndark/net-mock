@@ -16,6 +16,7 @@ The following table shows the implementation status of currenly planned features
 Component | Feature | Status
 --- | --- | ---
 Configuration | `ActivationStrategy`&nbsp;`{ Manual, AutomaticOnCreation }` (default is `AutomaticOnCreation`) | &#10003;
+&nbsp; | `MockBehavior`&nbsp;`{ Loose, Strict }` (default is `Loose`) | &#10003;
 &nbsp; | `PrintReceivedRequestsOnTearDown` (default is `false`) | &#10003;
 Mock creation | `CreateRestMock(int port, MockBehavior mockBehavior)` | &#10003;
 &nbsp; | `CreateRestMock(string basePath, int port, MockBehavior mockBehavior)` | &#10003;
