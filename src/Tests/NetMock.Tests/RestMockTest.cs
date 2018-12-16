@@ -344,6 +344,87 @@ namespace NetMock.Tests
 		}
 
 		[Test]
+		public void VerifyTimes()
+		{
+			using (ServiceMock serviceMock = new ServiceMock())
+			{
+				// arrange
+				RestMock restMock = serviceMock.CreateRestMock("/api/v1", 9001);
+
+				void Call(Action call, int times)
+				{
+					for (int i = 0; i < times; i++)
+						call();
+				}
+
+				// act
+				Call(() => _client.Get("/never/0"), 0);
+				Call(() => _client.Get("/never/1"), 1);
+				Call(() => _client.Get("/once/0"), 0);
+				Call(() => _client.Get("/once/1"), 1);
+				Call(() => _client.Get("/once/2"), 2);
+				Call(() => _client.Get("/twice/1"), 1);
+				Call(() => _client.Get("/twice/2"), 2);
+				Call(() => _client.Get("/twice/3"), 3);
+				Call(() => _client.Get("/exactly/4"), 4);
+				Call(() => _client.Get("/exactly/5"), 5);
+				Call(() => _client.Get("/exactly/6"), 6);
+				Call(() => _client.Get("/atleast/3"), 3);
+				Call(() => _client.Get("/atleast/4"), 4);
+				Call(() => _client.Get("/atleast/once/0"), 0);
+				Call(() => _client.Get("/atleast/once/1"), 1);
+				Call(() => _client.Get("/atleast/once/2"), 2);
+				Call(() => _client.Get("/atmost/3"), 3);
+				Call(() => _client.Get("/atmost/2"), 2);
+				Call(() => _client.Get("/atmost/once/2"), 2);
+				Call(() => _client.Get("/atmost/once/1"), 1);
+				Call(() => _client.Get("/atmost/once/0"), 0);
+				Call(() => _client.Get("/between/inclusive/3"), 3);
+				Call(() => _client.Get("/between/inclusive/5"), 5);
+				Call(() => _client.Get("/between/inclusive/7"), 7);
+				Call(() => _client.Get("/between/exclusive/4"), 4);
+				Call(() => _client.Get("/between/exclusive/5"), 5);
+				Call(() => _client.Get("/between/exclusive/6"), 6);
+
+				// assert
+				restMock.VerifyGet("/never/0", Times.Never);
+				restMock.VerifyGet("/once/1", Times.Once);
+				restMock.VerifyGet("/twice/2", Times.Twice);
+				restMock.VerifyGet("/exactly/5", Times.Exactly(5));
+				restMock.VerifyGet("/atleast/3", Times.AtLeast(3));
+				restMock.VerifyGet("/atleast/4", Times.AtLeast(3));
+				restMock.VerifyGet("/atleast/once/1", Times.AtLeastOnce);
+				restMock.VerifyGet("/atleast/once/2", Times.AtLeastOnce);
+				restMock.VerifyGet("/atmost/3", Times.AtMost(3));
+				restMock.VerifyGet("/atmost/2", Times.AtMost(3));
+				restMock.VerifyGet("/atmost/once/1", Times.AtMostOnce);
+				restMock.VerifyGet("/atmost/once/0", Times.AtMostOnce);
+				restMock.VerifyGet("/between/inclusive/3", Times.Between(3, 7, Range.Inclusive));
+				restMock.VerifyGet("/between/inclusive/5", Times.Between(3, 7, Range.Inclusive));
+				restMock.VerifyGet("/between/inclusive/7", Times.Between(3, 7, Range.Inclusive));
+				restMock.VerifyGet("/between/exclusive/4", Times.Between(3, 7, Range.Exclusive));
+				restMock.VerifyGet("/between/exclusive/5", Times.Between(3, 7, Range.Exclusive));
+				restMock.VerifyGet("/between/exclusive/6", Times.Between(3, 7, Range.Exclusive));
+
+				Assert.Throws<NetMockException>(() => restMock.VerifyGet("/never/1", Times.Never));
+				Assert.Throws<NetMockException>(() => restMock.VerifyGet("/once/0", Times.Once));
+				Assert.Throws<NetMockException>(() => restMock.VerifyGet("/once/2", Times.Once));
+				Assert.Throws<NetMockException>(() => restMock.VerifyGet("/twice/1", Times.Twice));
+				Assert.Throws<NetMockException>(() => restMock.VerifyGet("/twice/3", Times.Twice));
+				Assert.Throws<NetMockException>(() => restMock.VerifyGet("/exactly/4", Times.Exactly(5)));
+				Assert.Throws<NetMockException>(() => restMock.VerifyGet("/exactly/6", Times.Exactly(5)));
+				Assert.Throws<NetMockException>(() => restMock.VerifyGet("/atleast/3", Times.AtLeast(4)));
+				Assert.Throws<NetMockException>(() => restMock.VerifyGet("/atleast/once/0", Times.AtLeastOnce));
+				Assert.Throws<NetMockException>(() => restMock.VerifyGet("/atmost/3", Times.AtMost(2)));
+				Assert.Throws<NetMockException>(() => restMock.VerifyGet("/atmost/once/2", Times.AtMostOnce));
+				Assert.Throws<NetMockException>(() => restMock.VerifyGet("/between/inclusive/3", Times.Between(4, 6, Range.Inclusive)));
+				Assert.Throws<NetMockException>(() => restMock.VerifyGet("/between/inclusive/7", Times.Between(4, 6, Range.Inclusive)));
+				Assert.Throws<NetMockException>(() => restMock.VerifyGet("/between/exclusive/4", Times.Between(4, 6, Range.Exclusive)));
+				Assert.Throws<NetMockException>(() => restMock.VerifyGet("/between/exclusive/6", Times.Between(4, 6, Range.Exclusive)));
+			}
+		}
+
+		[Test]
 		public void ResponseWithBodyProvider1()
 		{
 			using (ServiceMock serviceMock = new ServiceMock())

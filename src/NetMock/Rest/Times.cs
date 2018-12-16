@@ -1,16 +1,30 @@
-namespace NetMock.Rest {
+using System;
+
+namespace NetMock.Rest
+{
 	public class Times
 	{
-		internal Times(int callCount)
+		internal Times(Func<int, bool> condition, string description)
 		{
-			CallCount = callCount;
+			Condition = condition;
+			Description = description;
 		}
 
-		public int CallCount { get; }
+		internal Func<int, bool> Condition { get; }
+		internal string Description { get; }
 
-		public static Times Never { get; } = new Times(0);
-		public static Times Once { get; } = new Times(1);
-		public static Times Twice { get; } = new Times(2);
-		public static Times Exactly(int callCount) => new Times(callCount);
+		public static Times Never { get; } = new Times(count => count == 0, "should never have been performed");
+		public static Times Once { get; } = new Times(count => count == 1, "once");
+		public static Times Twice { get; } = new Times(count => count == 2, "twice");
+		public static Times Exactly(int callCount) => new Times(count => count == callCount, $"exactly {callCount} times");
+		public static Times AtLeastOnce => new Times(count => count >= 1, "at least once");
+		public static Times AtMostOnce => new Times(count => count <= 1, "at most once");
+		public static Times AtLeast(int callCount) => new Times(count => count >= callCount, $"at least {callCount} times");
+		public static Times AtMost(int callCount) => new Times(count => count <= callCount, $"at most {callCount} times");
+		public static Times Between(int callCountFrom, int callCountTo, Range range) =>new Times(
+			count => range == Range.Inclusive
+				? count >= callCountFrom && count <= callCountTo
+				: count > callCountFrom && count < callCountTo,
+			$"between {callCountFrom} and {callCountTo} times ({range.ToString().ToLowerInvariant()})");
 	}
 }
