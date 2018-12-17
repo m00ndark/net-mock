@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using NetMock.Exceptions;
 
@@ -306,10 +306,10 @@ namespace NetMock.Rest
 		public void Verify(Method method, string path, IMatch[] matches, Times times)
 		{
 			RestRequestVerification requestVerification = new RestRequestVerification(this, method, path, matches);
-			int matchCount = _receivedRequests.Count(request => requestVerification.Match(request, out IList<MatchResult> matchResult));
+			int matchCount = _receivedRequests.Count(request => requestVerification.Match(request, out var _));
 
-			if (matchCount != times.CallCount)
-				throw new NetMockException($"Expected incoming calls to the mock {times.CallCount} times, but was {matchCount} times");
+			if (!times.Condition(matchCount))
+				throw new NetMockException($"Expected incoming calls to the mock {times.Description}, but was {matchCount} times");
 		}
 	}
 }

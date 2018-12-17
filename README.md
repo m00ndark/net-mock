@@ -158,12 +158,12 @@ Body matching | `Body.Is<TValue>(TValue value)` | &#10003;
 Verification hit count matching | `Times.Never` | &#10003;
 &nbsp; | `Times.Once` | &#10003;
 &nbsp; | `Times.Twice` | &#10003;
-&nbsp; | `Times.AtLeastOnce` |
-&nbsp; | `Times.AtMostOnce` |
+&nbsp; | `Times.AtLeastOnce` | &#10003;
+&nbsp; | `Times.AtMostOnce` | &#10003;
 &nbsp; | `Times.Exactly(int callCount)` | &#10003;
-&nbsp; | `Times.AtLeast(int callCount)` |
-&nbsp; | `Times.AtMost(int callCount)` |
-&nbsp; | `Times.Between(int callCountFrom, int callCountTo)` |
+&nbsp; | `Times.AtLeast(int callCount)` | &#10003;
+&nbsp; | `Times.AtMost(int callCount)` | &#10003;
+&nbsp; | `Times.Between(int callCountFrom, int callCountTo)` | &#10003;
 
 <!--
 &nbsp; | `` | &#10003;
