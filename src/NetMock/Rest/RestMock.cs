@@ -19,12 +19,40 @@ namespace NetMock.Rest
 			public static UndefinedHandling UndefinedHeaderHandling { get; set; } = UndefinedHandling.Ignore;
 			public static MockBehavior? MockBehavior { get; set; } = null;
 			public static bool InterpretBodyAsJson { get; set; } = true;
+			public static bool UseWildcardHostWhenListening { get; set; } = true;
+		}
+
+		private class UnhandledRequestExceptionData
+		{
+			public UnhandledRequestExceptionData(Exception exception, ReceivedRequest request)
+			{
+				Exception = exception;
+				Request = request;
+			}
+
+			public Exception Exception { get; }
+			public ReceivedRequest Request { get; }
+
+			public override string ToString()
+			{
+				string printedRequest = null;
+				Request.Print(request => printedRequest = request, Environment.NewLine, DefaultRequestPrinterSelectors_WithBody);
+
+				return string.Join(Environment.NewLine, Exception.GetTypesAndMessages().Select(x => $"[{x.ExceptionType.Name}] {x.Message}"))
+					+ Environment.NewLine
+					+ string.Join(Environment.NewLine + "--------" + Environment.NewLine, Exception.GetStackTraces())
+					+ (printedRequest != null
+						? Environment.NewLine
+							+ $"[{Request.GetType().Name}]"
+							+ (Environment.NewLine + printedRequest).Replace(Environment.NewLine, Environment.NewLine + ">  ")
+						: string.Empty);
+			}
 		}
 
 		private readonly HttpListenerController _httpListener;
 		private readonly List<RestRequestSetup> _requestDefinitions;
 		private readonly List<IReceivedRequest> _receivedRequests;
-		private readonly List<Exception> _unexpectedExceptions;
+		private readonly List<UnhandledRequestExceptionData> _unhandledExceptions;
 		private HttpStatusCode? _defaultResponseStatusCode;
 		private UndefinedHandling? _undefinedQueryParameterHandling;
 		private UndefinedHandling? _undefinedHeaderHandling;
@@ -37,7 +65,7 @@ namespace NetMock.Rest
 			_httpListener = new HttpListenerController(HandleRequest, certificate);
 			_requestDefinitions = new List<RestRequestSetup>();
 			_receivedRequests = new List<IReceivedRequest>();
-			_unexpectedExceptions = new List<Exception>();
+			_unhandledExceptions = new List<UnhandledRequestExceptionData>();
 			_mockBehavior = mockBehavior;
 			_isActivated = false;
 
@@ -48,11 +76,18 @@ namespace NetMock.Rest
 			Certificate = certificate;
 		}
 
-		public static IEnumerable<Func<IReceivedRequest, string>> DefaultRequestPrinterSelectors { get; } = new Func<IReceivedRequest, string>[]
+		public static IEnumerable<Func<IReceivedRequest, string>> DefaultRequestPrinterSelectors_WithoutBody { get; } = new Func<IReceivedRequest, string>[]
 			{
 				x => x.Method,
 				x => x.Uri.ToString(),
 				x => $"(bodyLength: {x.Body.Length}, headers: [{string.Join(" | ", x.Headers.Select(y => $"{y.Key}={y.Value}"))}])"
+			};
+
+		public static IEnumerable<Func<IReceivedRequest, string>> DefaultRequestPrinterSelectors_WithBody { get; } = new Func<IReceivedRequest, string>[]
+			{
+				x => $"{x.Method} {x.Uri}",
+				x => string.Join(Environment.NewLine, x.Headers.Select(y => $"{y.Key}={y.Value}")),
+				x => Environment.NewLine + x.Body
 			};
 
 		internal ServiceMock ServiceMock { get; }
@@ -92,7 +127,7 @@ namespace NetMock.Rest
 			set => _interpretBodyAsJson = value;
 		}
 
-		internal Uri BaseUri => new UriBuilder(Scheme == Scheme.Http ? Uri.UriSchemeHttp : Uri.UriSchemeHttps, "localhost", Port, BasePath).Uri;
+		internal Uri BaseUri => new UriBuilder(Scheme == Scheme.Http ? Uri.UriSchemeHttp : Uri.UriSchemeHttps, HttpListenerController.LOCALHOST, Port, BasePath).Uri;
 
 		public void Activate()
 		{
@@ -102,7 +137,7 @@ namespace NetMock.Rest
 			if (ServiceMock.ActivationStrategy == ActivationStrategy.Manual)
 				ParseRequestDefinitions();
 
-			_httpListener.StartListening(BaseUri, useWildcardHost: true);
+			_httpListener.StartListening(BaseUri, GlobalConfig.UseWildcardHostWhenListening);
 			_isActivated = true;
 		}
 
@@ -116,10 +151,10 @@ namespace NetMock.Rest
 				_isActivated = false;
 				_httpListener.StopListening();
 
-				if (_unexpectedExceptions.Any())
+				if (_unhandledExceptions.Any())
 				{
-					string exceptionOutput = _unexpectedExceptions.Aggregate(Environment.NewLine, (output, ex) => output + $"[{ex.GetType().Name}] {ex.Message.Replace(Environment.NewLine, " ")}{Environment.NewLine}{ex.StackTrace}{Environment.NewLine}");
-					throw new InternalNetMockException($"{Environment.NewLine}Unexpected exceptions caught:{exceptionOutput}", _unexpectedExceptions);
+					string exceptionOutput = string.Join(Environment.NewLine + Environment.NewLine, _unhandledExceptions.Select((x, i) => $"(#{i})" + Environment.NewLine + x.ToString()));
+					throw new InternalNetMockException("Unhandled exceptions caught while handling requests" + Environment.NewLine + exceptionOutput);
 				}
 
 				if (MockBehavior == MockBehavior.Strict)
@@ -136,12 +171,12 @@ namespace NetMock.Rest
 			{
 				_receivedRequests.Clear();
 				_requestDefinitions.Clear();
-				_unexpectedExceptions.Clear();
+				_unhandledExceptions.Clear();
 			}
 		}
 
 		public void PrintReceivedRequests()
-			=> _receivedRequests.Print(DefaultRequestPrinterSelectors);
+			=> _receivedRequests.Print(DefaultRequestPrinterSelectors_WithoutBody);
 
 		public void PrintReceivedRequests(params Func<IReceivedRequest, string>[] selectors)
 			=> _receivedRequests.Print(selectors);
@@ -159,11 +194,12 @@ namespace NetMock.Rest
 
 		private HttpResponse HandleRequest(HttpListenerRequest httpRequest)
 		{
+			ReceivedRequest request = null;
 			HttpResponse response = new HttpResponse { Headers = StaticResponseHeaders.MergeWith(GlobalConfig.StaticResponseHeaders) };
 
 			try
 			{
-				ReceivedRequest request = _receivedRequests.AddAndReturn(new ReceivedRequest(httpRequest));
+				request = _receivedRequests.AddAndReturn(new ReceivedRequest(httpRequest));
 
 				var match = _requestDefinitions
 					.Select(requestDefinition => new
@@ -190,7 +226,7 @@ namespace NetMock.Rest
 			}
 			catch (Exception ex)
 			{
-				_unexpectedExceptions.Add(ex);
+				_unhandledExceptions.Add(new UnhandledRequestExceptionData(ex, request));
 				throw new StatusCodeException(HttpStatusCode.InternalServerError, "Unhandled exception", ex);
 			}
 
