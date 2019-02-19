@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <Authors>Mattias Wijkström</Authors>
-    <PackageLicenseUrl>https://raw.github.com/m00ndark/net-mock/master/LICENSE</PackageLicenseUrl>
+    <PackageLicenseExpression>BSD-3-Clause</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/m00ndark/net-mock</PackageProjectUrl>
     <Description>NetMock is a .NET network service mock framework, inspired by Moq syntax, providing the ability to mock REST and web socket APIs from within a test framework of choice.</Description>
     <PackageTags>mock, framework, rest, websocket</PackageTags>
