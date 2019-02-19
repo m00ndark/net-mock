@@ -36,7 +36,38 @@ namespace NetMock.Utils
 			IList<Func<IReceivedRequest, string>> selectorList = selectors as IList<Func<IReceivedRequest, string>> ?? selectors.ToArray();
 
 			foreach (IReceivedRequest receivedRequest in receivedRequests)
-				printer(string.Join(separator, selectorList.Select(selector => selector(receivedRequest))));
+				receivedRequest.Print(printer, separator, selectorList);
+		}
+
+		public static void Print(this IReceivedRequest receivedRequest, params Func<IReceivedRequest, string>[] selectors)
+			=> receivedRequest.Print(selectors.AsEnumerable());
+
+		public static void Print(this IReceivedRequest receivedRequest, IEnumerable<Func<IReceivedRequest, string>> selectors)
+			=> receivedRequest.Print(DEFAULT_SEPARATOR, selectors);
+
+		public static void Print(this IReceivedRequest receivedRequest, string separator, params Func<IReceivedRequest, string>[] selectors)
+			=> receivedRequest.Print(separator, selectors.AsEnumerable());
+
+		public static void Print(this IReceivedRequest receivedRequest, string separator, IEnumerable<Func<IReceivedRequest, string>> selectors)
+			=> receivedRequest.Print(_defaultPrinter, separator, selectors);
+
+		public static void Print(this IReceivedRequest receivedRequest, Action<string> printer, params Func<IReceivedRequest, string>[] selectors)
+			=> receivedRequest.Print(printer, selectors.AsEnumerable());
+
+		public static void Print(this IReceivedRequest receivedRequest, Action<string> printer, IEnumerable<Func<IReceivedRequest, string>> selectors)
+			=> receivedRequest.Print(printer, DEFAULT_SEPARATOR, selectors);
+
+		public static void Print(this IReceivedRequest receivedRequest, Action<string> printer, string separator, params Func<IReceivedRequest, string>[] selectors)
+			=> receivedRequest.Print(printer, separator, selectors.AsEnumerable());
+
+		public static void Print(this IReceivedRequest receivedRequest, Action<string> printer, string separator, IEnumerable<Func<IReceivedRequest, string>> selectors)
+		{
+			if (receivedRequest == null)
+				return;
+
+			IList<Func<IReceivedRequest, string>> selectorList = selectors as IList<Func<IReceivedRequest, string>> ?? selectors.ToArray();
+
+			printer(string.Join(separator, selectorList.Select(selector => selector(receivedRequest))));
 		}
 	}
 }

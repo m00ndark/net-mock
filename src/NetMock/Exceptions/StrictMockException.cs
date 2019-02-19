@@ -19,7 +19,7 @@ namespace NetMock.Exceptions
 			StringBuilder result = new StringBuilder(Message);
 			result.AppendLine();
 			result.AppendLine();
-			UnmatchedRequests.Print(output => result.AppendLine(output), RestMock.DefaultRequestPrinterSelectors);
+			UnmatchedRequests.Print(output => result.AppendLine(output), RestMock.DefaultRequestPrinterSelectors_WithoutBody);
 			return result.ToString();
 		}
 	}

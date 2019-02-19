@@ -66,5 +66,44 @@ namespace NetMock.Utils
 		{
 			return body == null ? null : body is string bodyStr ? bodyStr : JsonConvert.SerializeObject(body);
 		}
+
+		public static IEnumerable<string> GetMessages(this Exception exception, bool replaceNewLines = true)
+		{
+			if (exception == null)
+				yield break;
+
+			yield return replaceNewLines
+				? exception.Message.Replace(Environment.NewLine, "↵↓")
+				: exception.Message;
+
+			foreach (string innerMessage in exception.InnerException.GetMessages())
+				yield return innerMessage;
+		}
+
+		public static IEnumerable<(Type ExceptionType, string Message)> GetTypesAndMessages(this Exception exception, bool replaceNewLines = true)
+		{
+			if (exception == null)
+				yield break;
+
+			yield return (exception.GetType(), replaceNewLines
+				? exception.Message.Replace(Environment.NewLine, "↵↓")
+				: exception.Message);
+
+			foreach ((Type, string) innerTypeAndMessage in exception.InnerException.GetTypesAndMessages())
+				yield return innerTypeAndMessage;
+		}
+
+		public static IEnumerable<string> GetStackTraces(this Exception exception, bool replaceNewLines = false)
+		{
+			if (exception == null)
+				yield break;
+
+			yield return replaceNewLines
+				? exception.StackTrace.Replace(Environment.NewLine, "↵↓")
+				: exception.StackTrace;
+
+			foreach (string innerStackTrace in exception.InnerException.GetStackTraces())
+				yield return innerStackTrace;
+		}
 	}
 }

@@ -11,8 +11,9 @@ namespace NetMock.Server
 {
 	internal class HttpListenerController
 	{
+		public const string LOCALHOST = "localhost";
 		public const string WILDCARD_HOST = "://+";
-		public const string WILDCARD_HOST_REPLACEMENT = "://localhost";
+		public const string WILDCARD_HOST_REPLACEMENT = "://" + LOCALHOST;
 
 		private readonly Func<HttpListenerRequest, HttpResponse> _requestCallback;
 		private readonly X509Certificate2 _certificate;
@@ -47,7 +48,7 @@ namespace NetMock.Server
 				if (uriPrefix.Scheme == Uri.UriSchemeHttps)
 				{
 					if (_certificate == null)
-						throw new CertificateException("Certifiace not provided. Unable to listen to https without binding certificate.");
+						throw new CertificateException("Certificate not provided. Unable to listen to https without binding certificate.");
 
 					_prefixPort = uriPrefix.Port;
 					CertificateUtil.BindCertificate(_certificate, _prefixPort);
@@ -85,7 +86,7 @@ namespace NetMock.Server
 										}
 										catch (Exception ex)
 										{
-											WriteResponse(context, ex.ToString(), 500);
+											WriteResponse(context, ex.ToString(), (int) HttpStatusCode.InternalServerError);
 										}
 										finally
 										{
