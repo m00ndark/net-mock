@@ -70,37 +70,44 @@ namespace NetMock.Server
 							{
 								ThreadPool.QueueUserWorkItem(obj =>
 									{
-										HttpListenerContext context = obj as HttpListenerContext;
+										if (!(obj is HttpListenerContext context))
+											return;
+
 										try
 										{
-											if (context == null)
-												return;
+											HttpResponse response;
 
-											HttpResponse response = _requestCallback(context.Request);
+											try
+											{
+												response = _requestCallback(context.Request);
+											}
+											catch (StatusCodeException ex)
+											{
+												response = new HttpResponse { Body = ex.ToString(), StatusCode = ex.StatusCode };
+											}
+											catch (Exception ex)
+											{
+												response = new HttpResponse { Body = ex.ToString(), StatusCode = (int) HttpStatusCode.InternalServerError };
+											}
 
-											WriteResponse(context, response.Body, response.StatusCode, response.Headers);
-										}
-										catch (StatusCodeException ex)
-										{
-											WriteResponse(context, ex.ToString(), ex.StatusCode);
+											WriteResponse(context, response);
 										}
 										catch (Exception ex)
 										{
-											WriteResponse(context, ex.ToString(), (int) HttpStatusCode.InternalServerError);
+											Console.WriteLine($"Unhandled exception in {nameof(HttpListenerController)}: {ex}");
 										}
 										finally
 										{
-											context?.Response.OutputStream.Close();
+											context.Response.OutputStream.Close();
 										}
 									}, _httpListener.GetContext());
 							}
 						}
 						catch
 						{
-							// suppress any exceptions
+							// likely due to tear down.. suppress any exceptions
 						}
 					});
-
 			}
 			catch
 			{
@@ -110,22 +117,22 @@ namespace NetMock.Server
 			}
 		}
 
-		private static void WriteResponse(HttpListenerContext context, string body, int statusCode, IDictionary<string, string> headers = null)
+		private static void WriteResponse(HttpListenerContext context, HttpResponse response)
 		{
-			context.Response.StatusCode = statusCode;
+			context.Response.StatusCode = response.StatusCode;
 
-			if (headers != null)
+			if (response.Headers != null)
 			{
-				foreach (KeyValuePair<string, string> header in headers)
+				foreach (KeyValuePair<string, string> header in response.Headers)
 				{
 					context.Response.Headers.Add(header.Key, header.Value);
 				}
 			}
 
-			if (body == null)
+			if (string.IsNullOrEmpty(response.Body))
 				return;
 
-			byte[] bodyBytes = Encoding.UTF8.GetBytes(body);
+			byte[] bodyBytes = Encoding.UTF8.GetBytes(response.Body);
 			context.Response.ContentLength64 = bodyBytes.Length;
 			context.Response.OutputStream.Write(bodyBytes, 0, bodyBytes.Length);
 		}
