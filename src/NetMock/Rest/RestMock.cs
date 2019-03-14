@@ -36,15 +36,11 @@ namespace NetMock.Rest
 			public override string ToString()
 			{
 				string printedRequest = null;
-				Request.Print(request => printedRequest = request, Environment.NewLine, DefaultRequestPrinterSelectors_WithBody);
+				Request.Print(request => printedRequest = request, String.NL, DefaultRequestPrinterSelectors_WithBody);
 
-				return string.Join(Environment.NewLine, Exception.GetTypesAndMessages().Select(x => $"[{x.ExceptionType.Name}] {x.Message}"))
-					+ Environment.NewLine
-					+ string.Join(Environment.NewLine + "--------" + Environment.NewLine, Exception.GetStackTraces())
+				return string.Join(String.NL + String.LINE + String.NL, Exception.ToStringEx().Select(x => $"[{x.ExceptionType.Name}] {x.Message}" + String.NL + x.StackTrace))
 					+ (printedRequest != null
-						? Environment.NewLine
-							+ $"[{Request.GetType().Name}]"
-							+ (Environment.NewLine + printedRequest).Replace(Environment.NewLine, Environment.NewLine + ">  ")
+						? String.NL + String.LINE + String.NL + $"[{Request.GetType().Name}]" + (String.NL + printedRequest).Replace(String.NL, String.NL + ">  ")
 						: string.Empty);
 			}
 		}
@@ -86,8 +82,8 @@ namespace NetMock.Rest
 		public static IEnumerable<Func<IReceivedRequest, string>> DefaultRequestPrinterSelectors_WithBody { get; } = new Func<IReceivedRequest, string>[]
 			{
 				x => $"{x.Method} {x.Uri}",
-				x => string.Join(Environment.NewLine, x.Headers.Select(y => $"{y.Key}={y.Value}")),
-				x => Environment.NewLine + x.Body
+				x => string.Join(String.NL, x.Headers.Select(y => $"{y.Key}={y.Value}")),
+				x => String.NL + x.Body
 			};
 
 		internal ServiceMock ServiceMock { get; }
@@ -153,8 +149,8 @@ namespace NetMock.Rest
 
 				if (_unhandledExceptions.Any())
 				{
-					string exceptionOutput = string.Join(Environment.NewLine + Environment.NewLine, _unhandledExceptions.Select((x, i) => $"(#{i})" + Environment.NewLine + x.ToString()));
-					throw new InternalNetMockException("Unhandled exceptions caught while handling requests" + Environment.NewLine + exceptionOutput);
+					string exceptionOutput = string.Join(String.NL + String.NL, _unhandledExceptions.Select((x, i) => $"(#{i})" + String.NL + x.ToString()));
+					throw new InternalNetMockException("Unhandled exceptions caught while handling requests" + String.NL + exceptionOutput);
 				}
 
 				if (MockBehavior == MockBehavior.Strict)

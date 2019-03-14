@@ -67,43 +67,24 @@ namespace NetMock.Utils
 			return body == null ? null : body is string bodyStr ? bodyStr : JsonConvert.SerializeObject(body);
 		}
 
-		public static IEnumerable<string> GetMessages(this Exception exception, bool replaceNewLines = true)
+		public static IEnumerable<(Type ExceptionType, string Message, string StackTrace)> ToStringEx(this Exception exception, bool replaceMessageNewLines = true, bool replaceStackTraceNewLines = false)
 		{
 			if (exception == null)
 				yield break;
 
-			yield return replaceNewLines
-				? exception.Message.Replace(Environment.NewLine, "↵↓")
-				: exception.Message;
+			yield return
+			(
+				exception.GetType(),
+				replaceMessageNewLines
+					? exception.Message.Replace(String.NL, "↵↓")
+					: exception.Message,
+				replaceStackTraceNewLines
+					? exception.StackTrace.Replace(String.NL, "↵↓")
+					: exception.StackTrace
+			);
 
-			foreach (string innerMessage in exception.InnerException.GetMessages())
-				yield return innerMessage;
-		}
-
-		public static IEnumerable<(Type ExceptionType, string Message)> GetTypesAndMessages(this Exception exception, bool replaceNewLines = true)
-		{
-			if (exception == null)
-				yield break;
-
-			yield return (exception.GetType(), replaceNewLines
-				? exception.Message.Replace(Environment.NewLine, "↵↓")
-				: exception.Message);
-
-			foreach ((Type, string) innerTypeAndMessage in exception.InnerException.GetTypesAndMessages())
-				yield return innerTypeAndMessage;
-		}
-
-		public static IEnumerable<string> GetStackTraces(this Exception exception, bool replaceNewLines = false)
-		{
-			if (exception == null)
-				yield break;
-
-			yield return replaceNewLines
-				? exception.StackTrace.Replace(Environment.NewLine, "↵↓")
-				: exception.StackTrace;
-
-			foreach (string innerStackTrace in exception.InnerException.GetStackTraces())
-				yield return innerStackTrace;
+			foreach ((Type, string, string) inner in exception.InnerException.ToStringEx(replaceMessageNewLines, replaceStackTraceNewLines))
+				yield return inner;
 		}
 	}
 }
