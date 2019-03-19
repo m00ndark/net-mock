@@ -46,9 +46,9 @@ namespace NetMock.Rest
 		}
 
 		private readonly HttpListenerController _httpListener;
-		private readonly List<RestRequestSetup> _requestDefinitions;
-		private readonly List<IReceivedRequest> _receivedRequests;
-		private readonly List<UnhandledRequestExceptionData> _unhandledExceptions;
+		private readonly ProtectedList<RestRequestSetup> _requestDefinitions;
+		private readonly ProtectedList<IReceivedRequest> _receivedRequests;
+		private readonly ProtectedList<UnhandledRequestExceptionData> _unhandledExceptions;
 		private HttpStatusCode? _defaultResponseStatusCode;
 		private UndefinedHandling? _undefinedQueryParameterHandling;
 		private UndefinedHandling? _undefinedHeaderHandling;
@@ -59,9 +59,9 @@ namespace NetMock.Rest
 		internal RestMock(ServiceMock serviceMock, string basePath, int port, Scheme scheme, X509Certificate2 certificate = null, MockBehavior? mockBehavior = null)
 		{
 			_httpListener = new HttpListenerController(HandleRequest, certificate);
-			_requestDefinitions = new List<RestRequestSetup>();
-			_receivedRequests = new List<IReceivedRequest>();
-			_unhandledExceptions = new List<UnhandledRequestExceptionData>();
+			_requestDefinitions = new ProtectedList<RestRequestSetup>();
+			_receivedRequests = new ProtectedList<IReceivedRequest>();
+			_unhandledExceptions = new ProtectedList<UnhandledRequestExceptionData>();
 			_mockBehavior = mockBehavior;
 			_isActivated = false;
 

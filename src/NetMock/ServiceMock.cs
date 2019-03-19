@@ -21,14 +21,14 @@ namespace NetMock
 			public static bool PrintReceivedRequestsOnTearDown { get; set; } = false;
 		}
 
-		private readonly List<INetMock> _mocks;
+		private readonly ProtectedList<INetMock> _mocks;
 		private ActivationStrategy? _activationStrategy;
 		private MockBehavior? _mockBehavior;
 		private bool? _printReceivedRequestsOnTearDown;
 
 		public ServiceMock(ActivationStrategy? activationStrategy = null, MockBehavior? mockBehavior = null, bool? printReceivedRequestsOnTearDown = null)
 		{
-			_mocks = new List<INetMock>();
+			_mocks = new ProtectedList<INetMock>();
 			_activationStrategy = activationStrategy;
 			_mockBehavior = mockBehavior;
 			_printReceivedRequestsOnTearDown = printReceivedRequestsOnTearDown;
