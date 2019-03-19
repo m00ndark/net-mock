@@ -306,7 +306,7 @@ namespace NetMock.Rest
 		public void Verify(Method method, string path, IMatch[] matches, Times times)
 		{
 			RestRequestVerification requestVerification = new RestRequestVerification(this, method, path, matches);
-			int matchCount = _receivedRequests.Count(request => requestVerification.Match(request, out var _));
+			int matchCount = _receivedRequests.Count(request => requestVerification.Match(request, out _));
 
 			if (!times.Condition(matchCount))
 				throw new NetMockException($"Expected incoming calls to the mock {times.Description}, but was {matchCount} times");
