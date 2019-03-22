@@ -9,15 +9,17 @@ namespace NetMock.Rest
 		public void Add((string Name, string Value) header) => Add(header.Name, header.Value);
 		public void Remove((string Name, string Value) header) => Remove(header.Name);
 
-		public StaticHeaders MergeWith(StaticHeaders staticHeaders)
+		public IDictionary<string, string> MergeWith(StaticHeaders staticHeaders)
 		{
+			IDictionary<string, string> result = new Dictionary<string, string>(this);
+
 			foreach (KeyValuePair<string, string> header in staticHeaders)
 			{
-				if (!Keys.Any(key => key.Equals(header.Key, StringComparison.InvariantCultureIgnoreCase)))
-					Add(header.Key, header.Value);
+				if (!result.Keys.Any(key => key.Equals(header.Key, StringComparison.InvariantCultureIgnoreCase)))
+					result.Add(header.Key, header.Value);
 			}
 
-			return this;
+			return result;
 		}
 	}
 }

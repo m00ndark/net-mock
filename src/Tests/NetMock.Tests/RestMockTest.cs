@@ -312,6 +312,7 @@ namespace NetMock.Tests
 				Assert.AreEqual(HttpStatusCode.Created, response.StatusCode);
 				CollectionAssert.Contains(response.Headers.Select(x => (x.Name, x.Value.ToString())), ("X-Message-Mode", "normal"));
 				CollectionAssert.Contains(response.Headers.Select(x => (x.Name, x.Value.ToString())), ("X-Message-Case-Sensitive", "true"));
+				CollectionAssert.Contains(response.Headers.Select(x => (x.Name, x.Value.ToString())), ("Content-Type", "application/json"));
 				restMock.VerifyPost("/message/reverse/store", Body.Is(requestMessage), Times.Once);
 			}
 		}

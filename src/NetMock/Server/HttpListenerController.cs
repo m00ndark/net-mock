@@ -66,7 +66,7 @@ namespace NetMock.Server
 					{
 						try
 						{
-							while (_httpListener.IsListening)
+							while (_httpListener?.IsListening ?? false)
 							{
 								ThreadPool.QueueUserWorkItem(obj =>
 									{
@@ -85,12 +85,16 @@ namespace NetMock.Server
 											{
 												response = new HttpResponse { Body = ex.ToString(), StatusCode = ex.StatusCode };
 											}
-											catch (Exception ex)
+											catch (Exception ex) when (IsListening || !(ex is HttpListenerException))
 											{
 												response = new HttpResponse { Body = ex.ToString(), StatusCode = (int) HttpStatusCode.InternalServerError };
 											}
 
 											WriteResponse(context, response);
+										}
+										catch (HttpListenerException) when (!IsListening)
+										{
+											// .. tearing down
 										}
 										catch (Exception ex)
 										{
@@ -98,14 +102,21 @@ namespace NetMock.Server
 										}
 										finally
 										{
-											context.Response.OutputStream.Close();
+											try
+											{
+												context.Response.OutputStream.Close();
+											}
+											catch
+											{
+												// likely due to tear down.. suppress
+											}
 										}
-									}, _httpListener.GetContext());
+									}, _httpListener?.GetContext());
 							}
 						}
 						catch
 						{
-							// likely due to tear down.. suppress any exceptions
+							// likely due to tear down.. suppress
 						}
 					});
 			}
@@ -144,9 +155,10 @@ namespace NetMock.Server
 
 			try
 			{
-				_httpListener?.Stop();
-				_httpListener?.Close();
+				HttpListener httpListener = _httpListener;
 				_httpListener = null;
+				httpListener?.Stop();
+				httpListener?.Close();
 
 				if (_prefixPort > -1)
 				{
