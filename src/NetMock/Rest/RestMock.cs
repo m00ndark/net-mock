@@ -220,7 +220,7 @@ namespace NetMock.Rest
 					match?.RequestDefinition.TryCallback(request, match.MatchResult);
 				}
 			}
-			catch (Exception ex)
+			catch (Exception ex) when (_isActivated || !(ex is HttpListenerException))
 			{
 				_unhandledExceptions.Add(new UnhandledRequestExceptionData(ex, request));
 				throw new StatusCodeException(HttpStatusCode.InternalServerError, "Unhandled exception", ex);
