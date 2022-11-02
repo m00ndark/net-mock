@@ -1,6 +1,5 @@
 using System;
 using System.Diagnostics;
-using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using NetMock.Exceptions;
 
@@ -8,12 +7,15 @@ namespace NetMock.Utils
 {
 	internal static class CertificateUtil
 	{
-		public static X509Certificate2 LoadCertifiace(X509FindType findType, string findValue, StoreName storeName, StoreLocation storeLocation)
+		private const StoreName InstallationStoreName = StoreName.My;
+		private const StoreLocation InstallationStoreLocation = StoreLocation.LocalMachine;
+
+		public static X509Certificate2 LoadCertificate(X509FindType findType, string findValue, StoreName storeName, StoreLocation storeLocation)
 		{
 			using (X509Store store = new X509Store(storeName, storeLocation))
 			{
 				store.Open(OpenFlags.ReadOnly);
-				X509Certificate2Collection certificates = store.Certificates.Find(findType, findValue, true);
+				X509Certificate2Collection certificates = store.Certificates.Find(findType, findValue, false);
 
 				if (certificates.Count == 0)
 					throw new CertificateException($"Certificate not found: [{findType}:{findValue}] {storeName} @ {storeLocation}");
@@ -22,6 +24,36 @@ namespace NetMock.Utils
 					throw new CertificateException($"Multiple matching certificates found: [{findType}:{findValue}] {storeName} @ {storeLocation}");
 
 				return certificates[0];
+			}
+		}
+
+		public static void AddCertificate(X509Certificate2 certificate)
+		{
+			ThrowIfNoThumbprint(certificate);
+
+			using (X509Store store = new X509Store(InstallationStoreName, InstallationStoreLocation))
+			{
+				store.Open(OpenFlags.ReadWrite);
+
+				if (CertificateExists(store, certificate.Thumbprint))
+					return;
+
+				store.Add(certificate);
+			}
+		}
+
+		public static void RemoveCertificate(X509Certificate2 certificate)
+		{
+			ThrowIfNoThumbprint(certificate);
+
+			using (X509Store store = new X509Store(InstallationStoreName, InstallationStoreLocation))
+			{
+				store.Open(OpenFlags.ReadWrite);
+
+				if (!CertificateExists(store, certificate.Thumbprint))
+					return;
+
+				store.Remove(certificate);
 			}
 		}
 
@@ -47,6 +79,21 @@ namespace NetMock.Utils
 			catch (Exception ex)
 			{
 				throw new CertificateException($"Failed to unbind certificate for port {port} (requires administrative privileges)", ex);
+			}
+		}
+
+		private static bool CertificateExists(X509Store store, string thumbprint)
+		{
+			X509Certificate2Collection certificates = store.Certificates.Find(X509FindType.FindByThumbprint, thumbprint, false);
+
+			return certificates.Count > 0;
+		}
+
+		private static void ThrowIfNoThumbprint(X509Certificate2 certificate)
+		{
+			if (string.IsNullOrEmpty(certificate.Thumbprint))
+			{
+				throw new CertificateException($"No thumbprint in certificate");
 			}
 		}
 

@@ -24,6 +24,7 @@ namespace NetMock.Tests
 		[OneTimeSetUp]
 		public void Initialize()
 		{
+			ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, errors) => true;
 			_client = new Client(Uri.UriSchemeHttp, "/api/v1", 9001);
 			_secureClient = new Client(Uri.UriSchemeHttps, "/api/v1", 9001);
 			ServiceMock.GlobalConfig.PrintReceivedRequestsOnTearDown = true;

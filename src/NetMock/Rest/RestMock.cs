@@ -56,7 +56,7 @@ namespace NetMock.Rest
 		private bool? _interpretBodyAsJson;
 		private bool _isActivated;
 
-		internal RestMock(ServiceMock serviceMock, string basePath, int port, Scheme scheme, X509Certificate2 certificate = null, MockBehavior? mockBehavior = null)
+		internal RestMock(ServiceMock serviceMock, string basePath, int port, Scheme scheme, X509Certificate2 certificate = null, bool installCertificate = false, MockBehavior? mockBehavior = null)
 		{
 			_httpListener = new HttpListenerController(HandleRequest, certificate);
 			_requestDefinitions = new ProtectedList<RestRequestSetup>();
@@ -70,6 +70,7 @@ namespace NetMock.Rest
 			Port = port;
 			Scheme = scheme;
 			Certificate = certificate;
+			InstallCertificate = installCertificate;
 		}
 
 		public static IEnumerable<Func<IReceivedRequest, string>> DefaultRequestPrinterSelectors_WithoutBody { get; } = new Func<IReceivedRequest, string>[]
@@ -91,6 +92,7 @@ namespace NetMock.Rest
 		public int Port { get; }
 		public Scheme Scheme { get; }
 		public X509Certificate2 Certificate { get; }
+		public bool InstallCertificate { get; }
 		public StaticHeaders StaticResponseHeaders { get; } = new StaticHeaders();
 
 		public HttpStatusCode DefaultResponseStatusCode
@@ -133,6 +135,11 @@ namespace NetMock.Rest
 			if (ServiceMock.ActivationStrategy == ActivationStrategy.Manual)
 				ParseRequestDefinitions();
 
+			if (Certificate != null && InstallCertificate)
+			{
+				CertificateUtil.AddCertificate(Certificate);
+			}
+
 			_httpListener.StartListening(BaseUri, GlobalConfig.UseWildcardHostWhenListening);
 			_isActivated = true;
 		}
@@ -146,6 +153,11 @@ namespace NetMock.Rest
 			{
 				_isActivated = false;
 				_httpListener.StopListening();
+
+				if (Certificate != null && InstallCertificate)
+				{
+					CertificateUtil.RemoveCertificate(Certificate);
+				}
 
 				if (_unhandledExceptions.Any())
 				{
