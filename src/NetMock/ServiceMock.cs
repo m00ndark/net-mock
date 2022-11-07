@@ -75,6 +75,15 @@ namespace NetMock
 		public RestMock CreateSecureRestMock(string basePath, int port, X509Certificate2 certificate, MockBehavior mockBehavior = MockBehavior.Loose)
 			=> CreateSecureRestMock(basePath, port, certificate, true, mockBehavior);
 
+		private RestMock CreateSecureRestMock(string basePath, int port, X509Certificate2 certificate, bool installCertificate, MockBehavior mockBehavior = MockBehavior.Loose)
+		{
+			return _mocks.AddAndReturn(new RestMock(this, basePath, port, Scheme.Https, certificate, installCertificate, mockBehavior), restMock =>
+			{
+				if (ActivationStrategy == ActivationStrategy.AutomaticOnCreation)
+					restMock.Activate();
+			});
+		}
+
 		public void PrintReceivedRequests()
 		{
 			_mocks.ForEach(mock => mock.PrintReceivedRequests());
@@ -100,15 +109,6 @@ namespace NetMock
 		public void Dispose()
 		{
 			TearDown();
-		}
-
-		private RestMock CreateSecureRestMock(string basePath, int port, X509Certificate2 certificate, bool installCertificate, MockBehavior mockBehavior = MockBehavior.Loose)
-		{
-			return _mocks.AddAndReturn(new RestMock(this, basePath, port, Scheme.Https, certificate, installCertificate, mockBehavior), restMock =>
-			{
-				if (ActivationStrategy == ActivationStrategy.AutomaticOnCreation)
-					restMock.Activate();
-			});
 		}
 	}
 }

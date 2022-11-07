@@ -55,6 +55,7 @@ namespace NetMock.Rest
 		private MockBehavior? _mockBehavior;
 		private bool? _interpretBodyAsJson;
 		private bool _isActivated;
+		private bool _certificateInstalled;
 
 		internal RestMock(ServiceMock serviceMock, string basePath, int port, Scheme scheme, X509Certificate2 certificate = null, bool installCertificate = false, MockBehavior? mockBehavior = null)
 		{
@@ -64,6 +65,7 @@ namespace NetMock.Rest
 			_unhandledExceptions = new ProtectedList<UnhandledRequestExceptionData>();
 			_mockBehavior = mockBehavior;
 			_isActivated = false;
+			_certificateInstalled = false;
 
 			ServiceMock = serviceMock;
 			BasePath = basePath;
@@ -137,7 +139,7 @@ namespace NetMock.Rest
 
 			if (Certificate != null && InstallCertificate)
 			{
-				CertificateUtil.AddCertificate(Certificate);
+				_certificateInstalled = CertificateUtil.AddCertificate(Certificate);
 			}
 
 			_httpListener.StartListening(BaseUri, GlobalConfig.UseWildcardHostWhenListening);
@@ -154,7 +156,7 @@ namespace NetMock.Rest
 				_isActivated = false;
 				_httpListener.StopListening();
 
-				if (Certificate != null && InstallCertificate)
+				if (Certificate != null && _certificateInstalled)
 				{
 					CertificateUtil.RemoveCertificate(Certificate);
 				}

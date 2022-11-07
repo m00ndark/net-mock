@@ -27,19 +27,24 @@ namespace NetMock.Utils
 			}
 		}
 
-		public static void AddCertificate(X509Certificate2 certificate)
+		public static bool AddCertificate(X509Certificate2 certificate)
 		{
 			ThrowIfNoThumbprint(certificate);
+
+			bool certificateAdded = false;
 
 			using (X509Store store = new X509Store(InstallationStoreName, InstallationStoreLocation))
 			{
 				store.Open(OpenFlags.ReadWrite);
 
-				if (CertificateExists(store, certificate.Thumbprint))
-					return;
-
-				store.Add(certificate);
+				if (!CertificateExists(store, certificate.Thumbprint))
+				{
+					store.Add(certificate);
+					certificateAdded = true;
+				}
 			}
+
+			return certificateAdded;
 		}
 
 		public static void RemoveCertificate(X509Certificate2 certificate)
