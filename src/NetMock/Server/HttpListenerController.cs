@@ -20,11 +20,6 @@ namespace NetMock.Server
 		private HttpListener _httpListener;
 		private int _prefixPort;
 
-		static HttpListenerController()
-		{
-			ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, errors) => true;
-		}
-
 		public HttpListenerController(Func<HttpListenerRequest, HttpResponse> requestCallback, X509Certificate2 certificate = null)
 		{
 			if (!HttpListener.IsSupported)

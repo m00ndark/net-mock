@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Security.Cryptography.X509Certificates;
 using NetMock.Rest;
 using NetMock.Utils;
@@ -65,21 +64,24 @@ namespace NetMock
 		}
 
 		public RestMock CreateSecureRestMock(int port, X509FindType certificateFindType, string certificateFindValue, StoreName storeName, StoreLocation storeLocation, MockBehavior mockBehavior = MockBehavior.Loose)
-			=> CreateSecureRestMock(string.Empty, port, CertificateUtil.LoadCertifiace(certificateFindType, certificateFindValue, storeName, storeLocation), mockBehavior);
+			=> CreateSecureRestMock(string.Empty, port, CertificateUtil.LoadCertificate(certificateFindType, certificateFindValue, storeName, storeLocation), false, mockBehavior);
 
 		public RestMock CreateSecureRestMock(string basePath, int port, X509FindType certificateFindType, string certificateFindValue, StoreName storeName, StoreLocation storeLocation, MockBehavior mockBehavior = MockBehavior.Loose)
-			=> CreateSecureRestMock(basePath, port, CertificateUtil.LoadCertifiace(certificateFindType, certificateFindValue, storeName, storeLocation), mockBehavior);
+			=> CreateSecureRestMock(basePath, port, CertificateUtil.LoadCertificate(certificateFindType, certificateFindValue, storeName, storeLocation), false, mockBehavior);
 
 		public RestMock CreateSecureRestMock(int port, X509Certificate2 certificate, MockBehavior mockBehavior = MockBehavior.Loose)
-			=> CreateSecureRestMock(string.Empty, port, certificate, mockBehavior);
+			=> CreateSecureRestMock(string.Empty, port, certificate, true, mockBehavior);
 
 		public RestMock CreateSecureRestMock(string basePath, int port, X509Certificate2 certificate, MockBehavior mockBehavior = MockBehavior.Loose)
+			=> CreateSecureRestMock(basePath, port, certificate, true, mockBehavior);
+
+		private RestMock CreateSecureRestMock(string basePath, int port, X509Certificate2 certificate, bool installCertificate, MockBehavior mockBehavior = MockBehavior.Loose)
 		{
-			return _mocks.AddAndReturn(new RestMock(this, basePath, port, Scheme.Https, certificate, mockBehavior), restMock =>
-				{
-					if (ActivationStrategy == ActivationStrategy.AutomaticOnCreation)
-						restMock.Activate();
-				});
+			return _mocks.AddAndReturn(new RestMock(this, basePath, port, Scheme.Https, certificate, installCertificate, mockBehavior), restMock =>
+			{
+				if (ActivationStrategy == ActivationStrategy.AutomaticOnCreation)
+					restMock.Activate();
+			});
 		}
 
 		public void PrintReceivedRequests()
