@@ -57,6 +57,9 @@ namespace NetMock.Tests.Utils
 		public IRestResponse Put(string path, IDictionary<string, string> parameters = null, IDictionary<string, string> headers = null, string body = null)
 			=> MakeRequest(Method.PUT, path, parameters, headers, body);
 
+		public IRestResponse Patch(string path, IDictionary<string, string> parameters = null, IDictionary<string, string> headers = null, string body = null)
+			=> MakeRequest(Method.PATCH, path, parameters, headers, body);
+
 		public IRestResponse Delete(string path, IDictionary<string, string> parameters = null, IDictionary<string, string> headers = null, string body = null)
 			=> MakeRequest(Method.DELETE, path, parameters, headers, body);
 
