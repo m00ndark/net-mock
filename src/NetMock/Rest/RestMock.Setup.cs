@@ -13,6 +13,9 @@ namespace NetMock.Rest
 		public RestRequestSetup SetupPut(string path, params IMatch[] matches)
 			=> Setup(Method.Put, path, matches);
 
+		public RestRequestSetup SetupPatch(string path, params IMatch[] matches)
+			=> Setup(Method.Patch, path, matches);
+
 		public RestRequestSetup SetupDelete(string path, params IMatch[] matches)
 			=> Setup(Method.Delete, path, matches);
 

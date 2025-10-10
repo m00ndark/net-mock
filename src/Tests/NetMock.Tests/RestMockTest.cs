@@ -24,6 +24,7 @@ namespace NetMock.Tests
 		[OneTimeSetUp]
 		public void Initialize()
 		{
+			RestMock.GlobalConfig.UseWildcardHostWhenListening = false;
 			ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, errors) => true;
 			_client = new Client(Uri.UriSchemeHttp, "/api/v1", 9001);
 			_secureClient = new Client(Uri.UriSchemeHttps, "/api/v1", 9001);
@@ -215,6 +216,29 @@ namespace NetMock.Tests
 				JsonAssert.AreEqual(responseMessage, response.Content);
 				restMock.VerifyPost("/message/reverse", Body.Is(requestMessage), Times.Once);
 				restMock.VerifyPost("/message/reverse", Body.Is("{ 'Text': 'torraP' }"), Times.Never);
+			}
+		}
+
+		[Test]
+		public void Patch()
+		{
+			using (ServiceMock serviceMock = new ServiceMock())
+			{
+				// arrange
+				Message requestMessage = new Message("Parrot");
+				Message responseMessage = new Message("torraP");
+				RestMock restMock = serviceMock.CreateRestMock("/api/v1", 9001);
+
+				restMock
+					.SetupPatch("/message/reverse", Body.Is(requestMessage))
+					.Returns(responseMessage);
+
+				// act
+				IRestResponse response = _client.Patch("/message/reverse", body: JsonConvert.SerializeObject(requestMessage));
+
+				// assert
+				JsonAssert.AreEqual(responseMessage, response.Content);
+				restMock.VerifyPatch("/message/reverse", Body.Is(requestMessage), Times.Once);
 			}
 		}
 

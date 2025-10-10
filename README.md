@@ -28,7 +28,7 @@ Mock creation | `CreateRestMock(int port, MockBehavior mockBehavior)` | &#10003;
 ### REST mock
 Component | Feature | Status
 --- | --- | ---
-HTTP methods | `Get `, `Post `, `Put `, `Delete `, `Head `, `Options `, `Trace `, `Connect` | &#10003;
+HTTP methods | `Get `, `Post `, `Put `, `Patch`, `Delete `, `Head `, `Options `, `Trace `, `Connect` | &#10003;
 Configuration | `StaticHeaders` | &#10003;
 &nbsp; | `DefaultResponseStatusCode` (default is `NotImplemented`) | &#10003;
 &nbsp; | `UndefinedQueryParameterHandling`&nbsp;`{ Ignore, Fail }` (default is `Fail`) | &#10003;
@@ -39,6 +39,7 @@ Request setup | `Setup(Method method, string path, params IMatch[] matches)` | &
 &nbsp; | `SetupGet(string path, params IMatch[] matches)` | &#10003;
 &nbsp; | `SetupPost(string path, params IMatch[] matches)` | &#10003;
 &nbsp; | `SetupPut(string path, params IMatch[] matches)` | &#10003;
+&nbsp; | `SetupPatch(string path, params IMatch[] matches)` | &#10003;
 &nbsp; | `SetupDelete(string path, params IMatch[] matches)` | &#10003;
 &nbsp; | `SetupHead(string path, params IMatch[] matches)` | &#10003;
 &nbsp; | `SetupOptions(string path, params IMatch[] matches)` | &#10003;
@@ -48,6 +49,7 @@ Request verification | `Verify(Method method, string path, params IMatch[] match
 &nbsp; | `VerifyGet(string path, params IMatch[] matches, Times times)` | &#10003;
 &nbsp; | `VerifyPost(string path, params IMatch[] matches, Times times)` | &#10003;
 &nbsp; | `VerifyPut(string path, params IMatch[] matches, Times times)` | &#10003;
+&nbsp; | `VerifyPatch(string path, params IMatch[] matches, Times times)` | &#10003;
 &nbsp; | `VerifyDelete(string path, params IMatch[] matches, Times times)` | &#10003;
 &nbsp; | `VerifyHead(string path, params IMatch[] matches, Times times)` | &#10003;
 &nbsp; | `VerifyOptions(string path, params IMatch[] matches, Times times)` | &#10003;
